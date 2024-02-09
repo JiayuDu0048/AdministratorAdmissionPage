@@ -1,0 +1,17 @@
+.custom-navbar {
+  background-color: #57068C; 
+}
+.button-violet{
+  background-color: #a2c7fb;
+}
+.custom-head {
+  background-color: #a2c7fb; 
+}
+
+input[type="checkbox"] {
+  -webkit-transform: scale(1.5); /* Safari Chrome */
+  -moz-transform: scale(1.5); /* Firefox */
+  -ms-transform: scale(1.5); /* IE 9 */
+  -o-transform: scale(1.5); /* Opera */
+  transform: scale(1.5);
+}
