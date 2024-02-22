@@ -15,6 +15,11 @@ function Table() {
       Email: "john2342@gmail.com",
       session: "1",
       sessionModality: "In-person",
+      admission: "Finished",
+      Matriculation: "Finished",
+      Unity: "Finished",
+      Coursera: "Finished",
+      Survey: "Finished",
     },
     {
       id: 2,
@@ -23,6 +28,11 @@ function Table() {
       Email: "jane897@gmail.com",
       session: "2",
       sessionModality: "In-person",
+      admission: "Finished",
+      Matriculation: "Unfinished",
+      Unity: "Unfinished",
+      Coursera: "Unfinished",
+      Survey: "Unfinished",
     },
     {
       id: 3,
@@ -31,6 +41,11 @@ function Table() {
       Email: "Bob9089@gmail.com",
       session: "3",
       sessionModality: "Online",
+      admission: "Unfinished",
+      Matriculation: "Unfinished",
+      Unity: "Unfinished",
+      Coursera: "Unfinished",
+      Survey: "Unfinished",
     },
   ]);
 
@@ -98,6 +113,15 @@ function Table() {
     }
   };
 
+  //status detect
+  const IsFinished = (status) => {
+    if (status === "Finished") {
+      return true;
+    } else {
+      return false;
+    }
+  };
+
   return (
     <>
       <div className="marginGlobal">
@@ -147,32 +171,32 @@ function Table() {
           )}
         </div>
         <div
-          class="modal fade"
+          className="modal fade"
           id="SaveConfirm"
           tabindex="-1"
           aria-labelledby="SaveConfirmLabel"
           aria-hidden="true"
         >
-          <div class="modal-dialog">
-            <div class="modal-content ">
-              <div class="modal-header">
-                <h1 class="modal-title fs-5" id="SaveConfirmLabel">
+          <div className="modal-dialog">
+            <div className="modal-content ">
+              <div className="modal-header">
+                <h1 className="modal-title fs-5" id="SaveConfirmLabel">
                   Confirmation
                 </h1>
                 <button
                   type="button"
-                  class="btn-close"
+                  className="btn-close"
                   data-bs-dismiss="modal"
                   aria-label="Close"
                 ></button>
               </div>
-              <div class="modal-body">
+              <div className="modal-body">
                 Are you sure you want to make these changes?
               </div>
-              <div class="modal-footer">
+              <div className="modal-footer">
                 <button
                   type="button"
-                  class="btn btn-secondary"
+                  className="btn btn-secondary"
                   data-bs-dismiss="modal"
                 >
                   Discard
@@ -180,7 +204,7 @@ function Table() {
                 <button
                   onClick={handleSaveClick}
                   type="button"
-                  class="btn btn-primary"
+                  className="btn btn-primary"
                   data-bs-dismiss="modal"
                 >
                   Confirm
@@ -293,11 +317,46 @@ function Table() {
                   width="20"
                 ></img>
               </th>
-              <th scope="col">Admission Status</th>
-              <th scope="col">Matriculation Status</th>
-              <th scope="col">Unity Status</th>
-              <th scope="col">Coursera Status</th>
-              <th scope="col">Survey Status</th>
+              <th scope="col">
+                Admission Status
+                <img
+                  src="https://cdn.icon-icons.com/icons2/906/PNG/512/sort_icon-icons.com_69899.png"
+                  alt="Logo"
+                  width="20"
+                ></img>
+              </th>
+              <th scope="col">
+                Matriculation Status
+                <img
+                  src="https://cdn.icon-icons.com/icons2/906/PNG/512/sort_icon-icons.com_69899.png"
+                  alt="Logo"
+                  width="20"
+                ></img>
+              </th>
+              <th scope="col">
+                Unity Status
+                <img
+                  src="https://cdn.icon-icons.com/icons2/906/PNG/512/sort_icon-icons.com_69899.png"
+                  alt="Logo"
+                  width="20"
+                ></img>
+              </th>
+              <th scope="col">
+                Coursera Status
+                <img
+                  src="https://cdn.icon-icons.com/icons2/906/PNG/512/sort_icon-icons.com_69899.png"
+                  alt="Logo"
+                  width="20"
+                ></img>
+              </th>
+              <th scope="col">
+                Survey Status
+                <img
+                  src="https://cdn.icon-icons.com/icons2/906/PNG/512/sort_icon-icons.com_69899.png"
+                  alt="Logo"
+                  width="20"
+                ></img>
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -342,11 +401,71 @@ function Table() {
                   )}
                 </td>
                 <td>{getStatus(row.session)}</td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
+                <td>
+                  {IsFinished(row.admission) ? (
+                    <div>
+                      <div className="Green-glowing-dot"></div>
+                      <div className="Green-text">Finished</div>
+                    </div>
+                  ) : (
+                    <div>
+                      <div className="Red-glowing-dot"></div>
+                      <div className="Red-text">Unfinished</div>
+                    </div>
+                  )}
+                </td>
+                <td>
+                  {IsFinished(row.Matriculation) ? (
+                    <div>
+                      <div className="Green-glowing-dot"></div>
+                      <div className="Green-text">Finished</div>
+                    </div>
+                  ) : (
+                    <div>
+                      <div className="Red-glowing-dot"></div>
+                      <div className="Red-text">Unfinished</div>
+                    </div>
+                  )}
+                </td>
+                <td>
+                  {IsFinished(row.Unity) ? (
+                    <div>
+                      <div className="Green-glowing-dot"></div>
+                      <div className="Green-text">Finished</div>
+                    </div>
+                  ) : (
+                    <div>
+                      <div className="Red-glowing-dot"></div>
+                      <div className="Red-text">Unfinished</div>
+                    </div>
+                  )}
+                </td>
+                <td>
+                  {IsFinished(row.Unity) ? (
+                    <div>
+                      <div className="Green-glowing-dot"></div>
+                      <div className="Green-text">Finished</div>
+                    </div>
+                  ) : (
+                    <div>
+                      <div className="Red-glowing-dot"></div>
+                      <div className="Red-text">Unfinished</div>
+                    </div>
+                  )}
+                </td>
+                <td>
+                  {IsFinished(row.Unity) ? (
+                    <div>
+                      <div className="Green-glowing-dot"></div>
+                      <div className="Green-text">Finished</div>
+                    </div>
+                  ) : (
+                    <div>
+                      <div className="Red-glowing-dot"></div>
+                      <div className="Red-text">Unfinished</div>
+                    </div>
+                  )}
+                </td>
               </tr>
             ))}
           </tbody>

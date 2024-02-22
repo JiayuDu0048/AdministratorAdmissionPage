@@ -52,3 +52,34 @@ input[type="checkbox"] {
   -o-transform: scale(1.5); /* Opera */
   transform: scale(1.5);
 }
+
+/* status style*/
+.Green-glowing-dot {
+  width: 12px;
+  height: 12px;
+  margin-top: 7px;
+  border-radius: 50%;
+  background-color: #31b900; 
+  border: 0.5px solid #dee1e6;
+  display: inline-block; 
+  margin-right: 5px;}
+  .Green-text{
+    font-weight: 600;
+    color: #31b900;
+    display: inline-block;
+  }
+  .Red-glowing-dot {
+    width: 12px;
+    height: 12px;
+    margin-top: 7px;
+    border-radius: 50%;
+    background-color: #ff0000; 
+    border: 0.5px solid #dee1e6;
+
+    display: inline-block; 
+    margin-right: 5px;}
+    .Red-text{
+      font-weight: 600;
+      color: #ff0000;
+      display: inline-block;
+    }
