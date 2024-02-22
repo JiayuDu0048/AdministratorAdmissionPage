@@ -10,7 +10,11 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "bootstrap": "^5.2.3",
+    "@emotion/react": "^11.11.3",
+    "@emotion/styled": "^11.11.0",
+    "@mui/material": "^5.15.10",
+    "@popperjs/core": "^2.11.8",
+    "bootstrap": "^5.3.3",
     "datatables.net-bs5": "^1.13.8",
     "datatables.net-dt": "^1.13.8",
     "datatables.net-select": "^1.7.0",
