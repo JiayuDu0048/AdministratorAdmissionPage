@@ -48,6 +48,8 @@ function Table() {
       Survey: "Unfinished",
     },
   ]);
+  const startingIndex = 6;
+  const StatusNames = Object.keys(rows[0]).slice(startingIndex);
 
   //Load the table using datatable and reload when the rows changed
   const tableRef = useRef(null);
@@ -80,11 +82,10 @@ function Table() {
     // 添加保存编辑内容的代码
   }
 
-  //email change function
-  const handleEmailChange = (id, newEmail) => {
+  const handleStatusChange = (id, StatusName, newStatus) => {
     const updatedData = rows.map((row) => {
       if (row.id === id) {
-        return { ...row, Email: newEmail };
+        return { ...row, [StatusName]: newStatus };
       }
       return row;
     });
@@ -92,15 +93,6 @@ function Table() {
   };
 
   //session change function
-  const handleStatusChange = (id, newStatus) => {
-    const updatedData = rows.map((row) => {
-      if (row.id === id) {
-        return { ...row, session: newStatus };
-      }
-      return row;
-    });
-    setRows(updatedData);
-  };
   const getStatus = (session) => {
     if (session === "1") {
       return "In-person";
@@ -173,7 +165,7 @@ function Table() {
         <div
           className="modal fade"
           id="SaveConfirm"
-          tabindex="-1"
+          tabIndex="-1"
           aria-labelledby="SaveConfirmLabel"
           aria-hidden="true"
         >
@@ -229,7 +221,7 @@ function Table() {
         <div
           className="modal fade"
           id="exampleModal"
-          tabindex="-1"
+          tabIndex="-1"
           aria-labelledby="exampleModalLabel"
           aria-hidden="true"
         >
@@ -377,7 +369,7 @@ function Table() {
                       type="text"
                       value={row.Email}
                       onChange={(e) =>
-                        handleEmailChange(row.id, e.target.value)
+                        handleStatusChange(row.id, "Email", e.target.value)
                       }
                     />
                   ) : (
@@ -389,7 +381,7 @@ function Table() {
                     <select
                       value={row.session}
                       onChange={(e) =>
-                        handleStatusChange(row.id, e.target.value)
+                        handleStatusChange(row.id, "session", e.target.value)
                       }
                     >
                       <option value="1">1</option>
@@ -401,71 +393,35 @@ function Table() {
                   )}
                 </td>
                 <td>{getStatus(row.session)}</td>
-                <td>
-                  {IsFinished(row.admission) ? (
-                    <div>
-                      <div className="Green-glowing-dot"></div>
-                      <div className="Green-text">Finished</div>
-                    </div>
-                  ) : (
-                    <div>
-                      <div className="Red-glowing-dot"></div>
-                      <div className="Red-text">Unfinished</div>
-                    </div>
-                  )}
-                </td>
-                <td>
-                  {IsFinished(row.Matriculation) ? (
-                    <div>
-                      <div className="Green-glowing-dot"></div>
-                      <div className="Green-text">Finished</div>
-                    </div>
-                  ) : (
-                    <div>
-                      <div className="Red-glowing-dot"></div>
-                      <div className="Red-text">Unfinished</div>
-                    </div>
-                  )}
-                </td>
-                <td>
-                  {IsFinished(row.Unity) ? (
-                    <div>
-                      <div className="Green-glowing-dot"></div>
-                      <div className="Green-text">Finished</div>
-                    </div>
-                  ) : (
-                    <div>
-                      <div className="Red-glowing-dot"></div>
-                      <div className="Red-text">Unfinished</div>
-                    </div>
-                  )}
-                </td>
-                <td>
-                  {IsFinished(row.Unity) ? (
-                    <div>
-                      <div className="Green-glowing-dot"></div>
-                      <div className="Green-text">Finished</div>
-                    </div>
-                  ) : (
-                    <div>
-                      <div className="Red-glowing-dot"></div>
-                      <div className="Red-text">Unfinished</div>
-                    </div>
-                  )}
-                </td>
-                <td>
-                  {IsFinished(row.Unity) ? (
-                    <div>
-                      <div className="Green-glowing-dot"></div>
-                      <div className="Green-text">Finished</div>
-                    </div>
-                  ) : (
-                    <div>
-                      <div className="Red-glowing-dot"></div>
-                      <div className="Red-text">Unfinished</div>
-                    </div>
-                  )}
-                </td>
+                {StatusNames.map((StatusName, index) => (
+                  <td key={index}>
+                    {isEditing ? (
+                      <select
+                        value={row[StatusName]}
+                        onChange={(e) =>
+                          handleStatusChange(row.id, StatusName, e.target.value)
+                        }
+                      >
+                        <option value="Finished">Finished</option>
+                        <option value="Unfinished">Unfinished</option>
+                      </select>
+                    ) : (
+                      <div>
+                        {IsFinished(row[StatusName]) ? (
+                          <div>
+                            <div className="Green-glowing-dot"></div>
+                            <div className="Green-text">Finished</div>
+                          </div>
+                        ) : (
+                          <div>
+                            <div className="Red-glowing-dot"></div>
+                            <div className="Red-text">Unfinished</div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </td>
+                ))}
               </tr>
             ))}
           </tbody>
