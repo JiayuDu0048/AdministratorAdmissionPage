@@ -2,11 +2,14 @@ import React, { useEffect, useRef, useState } from "react";
 import $ from "jquery";
 import "datatables.net";
 import "datatables.net-bs5";
-import "/Users/jiayudu/AdmissionPage/node_modules/bootstrap/dist/js/bootstrap.bundle.js";
+//import "/Users/jiayudu/AdmissionPage/node_modules/bootstrap/dist/js/bootstrap.bundle.js";
+import 'bootstrap/dist/js/bootstrap.bundle'; //Change the above line to relative path-> more compatible
 import "@popperjs/core";
+import CsvUpload from "./CSVupload";
 
 function Table() {
-  //Data
+  //Sample Data
+  const [csvData, setCsvData] = useState([]);
   const [rows, setRows] = useState([
     {
       id: 1,
@@ -50,6 +53,13 @@ function Table() {
   ]);
   const startingIndex = 6;
   const StatusNames = Object.keys(rows[0]).slice(startingIndex);
+
+  //Callback function to receive csv data from CsvUpload
+  const handleCsvData = (data) => {
+    setCsvData(data);
+    //TODO: process csv data here
+    console.log("Received CSV Data: ", data);
+  };
 
   //Load the table using datatable and reload when the rows changed
   const tableRef = useRef(null);
@@ -114,17 +124,12 @@ function Table() {
     }
   };
 
+
   return (
     <>
       <div className="marginGlobal">
         {/* Upload function */}
-        <div className="styleUpload">
-          <button type="button" className="btn btn-primary btn-lg">
-            Upload
-          </button>
-          <h2 className="textUpload">/ </h2>
-          <h3 className="textUpload">Drag & Drop .csv file here</h3>
-        </div>
+        <CsvUpload onCsvData={handleCsvData}> </CsvUpload>
 
         {/* Edit Mode & Save button*/}
         <div className="editPositionController">
