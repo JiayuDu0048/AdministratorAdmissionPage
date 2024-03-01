@@ -43,21 +43,63 @@ function CsvUpload({onCsvData}) {
         }
     };
 
+    const preprocessData = (data) => {
+        return data.map(row => {
+            // Extracting session number
+            let sessionNumber = null;
+            const sessionMatch = row["Session"].match(/Session\s+(\d+)/i);
+
+            if (sessionMatch) {
+                sessionNumber = sessionMatch[1];
+                console.log(sessionNumber);
+                console.log(typeof sessionNumber);
+            }
+            
+
+            // Extracting session modality
+            let sessionModality = "Unknown"; // Default to Unknown if not specified or not matched
+            const modalityMatch = row["Session"] && row["Session"].match(/\((Online|In-person)\)/i);
+            if (modalityMatch) {
+                sessionModality = modalityMatch[1];
+            } else {
+                console.log("Session modality not found in:", row["Session"]);
+            }
+
+            // Transform the row object to match the columns in the table
+            return {
+                NNumber: row["Campus ID"],
+                Name: `${row["Preferred"]} ${row["Last"]}`,
+                Email: row["Email"],
+                Session: sessionNumber,
+                SessionModality: sessionModality,
+                AdmissionStatus: row["Application Status"],
+
+                //TO DO?
+                MatriculationStatus: "TBD",
+                UnityStatus: "TBD",
+                CourseraStatus: "TBD",
+                SurveyStatus: "TBD" 
+            };
+        });
+    };
+
+
     // Function to parse the CSV file
     const parseCsv = (file) => {
         Papa.parse(file, {
             complete: (result) => {
-                console.log("Parsed CSV Data: ", result.data);
                 // After parsing, send the data to the backend
                 // sendDataToBackend(result.data);
+
                 // Use callback function to send data from child to parent
-                onCsvData(result);
+                const preprocessedData = preprocessData(result.data);
+                onCsvData(preprocessedData);
             },
             header: true,
         });
     };
 
-    // Function to send data to the backend
+    // TO DO:  Function to send data to the backend
     // const sendDataToBackend = async (data) => {
     //     try {
     //         const response = await axios.post("YOUR_BACKEND_ENDPOINT", data);
