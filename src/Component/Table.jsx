@@ -52,13 +52,20 @@ function Table() {
     },
   ]);
   const startingIndex = 6;
-  const StatusNames = Object.keys(rows[0]).slice(startingIndex);
+  // const StatusNames = Object.keys(rows[0]).slice(startingIndex);
+  const StatusNames = rows[0] ? Object.keys(rows[0]).slice(startingIndex) : [];
+
 
   //Callback function to receive csv data from CsvUpload
   const handleCsvData = (data) => {
     setCsvData(data);
-    //TODO: process csv data here
-    console.log("Received CSV Data: ", data);
+    console.log(data);
+    // Ensure data is an array before setting rows
+    if (Array.isArray(data)) {
+      setRows(data);
+    } else {
+      console.error("Received CSV data is not an array:", data);
+    }
   };
 
   //Load the table using datatable and reload when the rows changed
@@ -104,12 +111,14 @@ function Table() {
 
   //session change function
   const getStatus = (session) => {
-    if (session === "1") {
-      return "In-person";
-    } else if (session === "2") {
-      return "In-person";
-    } else if (session === "3") {
+    const sessionStr = String(session);
+
+    if (sessionStr == "1") {
       return "Online";
+    } else if (sessionStr == "2") {
+      return "In-person";
+    } else if (sessionStr == "3") {
+      return "In-person";
     } else {
       return "Unknown";
     }
@@ -357,7 +366,7 @@ function Table() {
             </tr>
           </thead>
           <tbody>
-            {rows.map((row) => (
+            { rows.map((row) => (
               <tr key={row.id}>
                 <th scope="row">
                   <input
@@ -384,7 +393,7 @@ function Table() {
                 <td>
                   {isEditing ? (
                     <select
-                      value={row.session}
+                      value={row.Session}
                       onChange={(e) =>
                         handleStatusChange(row.id, "session", e.target.value)
                       }
@@ -394,10 +403,10 @@ function Table() {
                       <option value="3">3</option>
                     </select>
                   ) : (
-                    row.session
+                    row.Session
                   )}
                 </td>
-                <td>{getStatus(row.session)}</td>
+                <td>{getStatus(row.Session)}</td>
                 {StatusNames.map((StatusName, index) => (
                   <td key={index}>
                     {isEditing ? (
