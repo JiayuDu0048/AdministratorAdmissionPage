@@ -101,7 +101,7 @@ function CsvUpload({onCsvData}) {
     const sendDataToBackend = async (data) => {
         // console.log("Sending data to the backend", JSON.stringify(data, null, 2))
         try {
-            const response = await axios.post("http://localhost:3001/populate/data", data, {
+            const response = await axiosProvider.post("/populate/data", data, {
                 headers: {
                   'Content-Type': 'application/json'
                 }});
