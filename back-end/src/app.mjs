@@ -9,15 +9,13 @@ import morgan from 'morgan';
 import session from 'express-session';
 import mongoose from 'mongoose';  
 import passport from 'passport'
+import populateDataRouter from './routes/populateDataRouter.mjs';
 // import CustomJwtStrategy from './config/jwt-config.mjs';
 
 const app = express();
 
-
-// use the morgan middleware to log all incoming http requests
-app.use(morgan("dev"));
-
-// use express's builtin body-parser middleware to parse any data included in a request
+// Middlewares
+app.use(morgan("dev")); // morgan: log all incoming http requests
 app.use(express.json()); // decode JSON-formatted incoming POST data
 app.use(express.urlencoded({ extended: true })); // decode url-encoded incoming POST data
 
@@ -34,7 +32,6 @@ const corsOptions = {
 }
 app.use(cors(corsOptions));
 
-console.log(process.env.CLIENT_URL);
 
 // Connect to MongoDB
 mongoose.connect(process.env.MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: true })
@@ -43,18 +40,22 @@ mongoose.connect(process.env.MONGODB_URI, { useNewUrlParser: true, useUnifiedTop
   })
   .catch(err => console.error('Could not connect to MongoDB...', err));
 
+
+// Routers
+app.post('/populate/data', populateDataRouter);
+
+
 // session to auto-save user data (like id) when they login
-app.use(session({
-  secret: process.env.SESSION_SECRET,
-  resave: false,
-  saveUninitialized:true,
-  cookie: {httpOnly: true, secure: process.env.NODE_ENV==="production"}
-}))
-console.log('Session secret:', process.env.SESSION_SECRET);
+// app.use(session({
+//   secret: process.env.SESSION_SECRET,
+//   resave: false,
+//   saveUninitialized:true,
+//   cookie: {httpOnly: true, secure: process.env.NODE_ENV==="production"}
+// }))
+// console.log('Session secret:', process.env.SESSION_SECRET);
 
 // // jwt strategy
 // passport.use(CustomJwtStrategy)
-
 // // initialize passport
 // app.use(passport.initialize())
 

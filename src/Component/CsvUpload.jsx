@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import Papa from "papaparse";
-import axios from "axios";
+import axiosProvider from "../utils/axiosConfig";
+import axios from 'axios';
 
 function CsvUpload({onCsvData}) {
     const [dragging, setDragging] = useState(false);
@@ -51,8 +52,6 @@ function CsvUpload({onCsvData}) {
 
             if (sessionMatch) {
                 sessionNumber = sessionMatch[1];
-                console.log(sessionNumber);
-                console.log(typeof sessionNumber);
             }
             
 
@@ -72,13 +71,12 @@ function CsvUpload({onCsvData}) {
                 Email: row["Email"],
                 Session: sessionNumber,
                 SessionModality: sessionModality,
-                AdmissionStatus: row["Application Status"],
-
-                //TO DO?
-                MatriculationStatus: "TBD",
-                UnityStatus: "TBD",
-                CourseraStatus: "TBD",
-                SurveyStatus: "TBD" 
+                //Update these fields from admin
+                AdmissionStatus: "",
+                MatriculationStatus: "",
+                UnityStatus: "",
+                CourseraStatus: "",
+                SurveyStatus: "" 
             };
         });
     };
@@ -88,28 +86,29 @@ function CsvUpload({onCsvData}) {
     const parseCsv = (file) => {
         Papa.parse(file, {
             complete: (result) => {
-                // After parsing, send the data to the backend
-                // sendDataToBackend(result.data);
-
                 // Use callback function to send data from child to parent
                 const preprocessedData = preprocessData(result.data);
                 onCsvData(preprocessedData);
+
+                // After parsing, send the data to the backend
+                sendDataToBackend(preprocessedData);
             },
             header: true,
         });
     };
 
-    // TO DO:  Function to send data to the backend
-    // const sendDataToBackend = async (data) => {
-    //     try {
-    //         const response = await axios.post("YOUR_BACKEND_ENDPOINT", data);
-    //         console.log("Upload response: ", response.data);
-    //         // Handle success 
-    //     } catch (error) {
-    //         console.error("Error uploading data: ", error);
-    //         // Handle error
-    //     }
-    // };
+    // Function to send data to the backend
+    const sendDataToBackend = async (data) => {
+        // console.log("Sending data to the backend", JSON.stringify(data, null, 2))
+        try {
+            const response = await axios.post("http://localhost:3001/populate/data", data, {
+                headers: {
+                  'Content-Type': 'application/json'
+                }});
+        } catch (error) {
+            console.error("Error uploading data: ", error.response ? error.response.data : error);//if error.response exists, see the detailed data
+        }
+    };
 
     const handleUpload = () => {
         if (!csvFile) {
@@ -119,23 +118,6 @@ function CsvUpload({onCsvData}) {
         parseCsv(csvFile);
     };
 
-    // return (
-    //     <div className="marginGlobal">
-    //         <div
-    //             className={`styleUpload ${dragging ? "dragging" : ""}`}
-    //             onDragEnter={handleDragEnter}
-    //             onDragOver={handleDragOver}
-    //             onDragLeave={handleDragLeave}
-    //             onDrop={handleDrop}
-    //         >
-    //             <button type="button" className="btn btn-primary btn-lg" onClick={handleUpload}>
-    //                 Upload
-    //             </button>
-    //             <h2 className="textUpload">/ </h2>
-    //             <h3 className="textUpload">Drag & Drop .csv file here</h3>
-    //         </div>
-    //     </div>
-    // );
 
     return (
         <div className="marginGlobal">
