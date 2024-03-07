@@ -1,6 +1,6 @@
 # To run the frontend:
 Open the terminal, run the following:
-- cd AdministratorAdmissionPage/front-end
+- cd AdministratorAdmissionPage/front-end/src
 - npm install
 - npm run dev
 
