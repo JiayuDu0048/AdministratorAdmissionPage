@@ -10,50 +10,12 @@ import CsvUpload from "./CSVupload";
 function Table() {
   //Sample Data
   const [csvData, setCsvData] = useState([]);
-  const [rows, setRows] = useState([
-    {
-      id: 1,
-      Name: "John",
-      NNumber: "12345678",
-      Email: "john2342@gmail.com",
-      session: "1",
-      sessionModality: "In-person",
-      admission: "Finished",
-      Matriculation: "Finished",
-      Unity: "Finished",
-      Coursera: "Finished",
-      Survey: "Finished",
-    },
-    {
-      id: 2,
-      Name: "Jane",
-      NNumber: "86754321",
-      Email: "jane897@gmail.com",
-      session: "2",
-      sessionModality: "In-person",
-      admission: "Finished",
-      Matriculation: "Unfinished",
-      Unity: "Unfinished",
-      Coursera: "Unfinished",
-      Survey: "Unfinished",
-    },
-    {
-      id: 3,
-      Name: "Bob",
-      NNumber: "09754678",
-      Email: "Bob9089@gmail.com",
-      session: "3",
-      sessionModality: "Online",
-      admission: "Unfinished",
-      Matriculation: "Unfinished",
-      Unity: "Unfinished",
-      Coursera: "Unfinished",
-      Survey: "Unfinished",
-    },
-  ]);
-  const startingIndex = 6;
+  const [rows, setRows] = useState([]);
+
+  const startingIndex = 5;
   // const StatusNames = Object.keys(rows[0]).slice(startingIndex);
   const StatusNames = rows[0] ? Object.keys(rows[0]).slice(startingIndex) : [];
+  console.log(StatusNames)
 
 
   //Callback function to receive csv data from CsvUpload
@@ -68,11 +30,37 @@ function Table() {
     }
   };
 
+  
   //Load the table using datatable and reload when the rows changed
   const tableRef = useRef(null);
   useEffect(() => {
-    $(tableRef.current).DataTable();
-  }, [rows]);
+    // Only proceed if the table is ready and the DOM is fully updated
+    if (rows.length > 0) {
+      const $dataTable = $(tableRef.current);
+  
+      // Check if the DataTable instance already exists
+      if ($.fn.dataTable.isDataTable($dataTable)) {
+        // If it exists, destroy it to prevent reinitialization errors
+        $dataTable.DataTable().destroy();
+      }
+  
+      // Reinitialize DataTables on the next event loop tick to ensure the DOM is updated
+      setTimeout(() => {
+        $dataTable.DataTable({
+          // Configuration options here
+        });
+      }, 0);
+    }
+  
+    // Cleanup function to destroy the DataTable instance
+    return () => {
+      if ($.fn.dataTable.isDataTable(tableRef.current)) {
+        $(tableRef.current).DataTable().destroy();
+      }
+    };
+  }, [rows]); // Dependency on 'rows' to re-run when data changes
+  
+  
 
   //multiple choice and delete function
   const [selectedRows, setSelectedRows] = useState([]);
