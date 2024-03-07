@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import Papa from "papaparse";
 import axiosProvider from "../utils/axiosConfig";
-import axios from 'axios';
 
 function CsvUpload({onCsvData}) {
     const [dragging, setDragging] = useState(false);
