@@ -8,48 +8,54 @@ import "@popperjs/core";
 import CsvUpload from "./CSVupload";
 
 function Table() {
-  //Sample Data
-  const [csvData, setCsvData] = useState([]);
   const [rows, setRows] = useState([]);
 
   const startingIndex = 5;
   // const StatusNames = Object.keys(rows[0]).slice(startingIndex);
   const StatusNames = rows[0] ? Object.keys(rows[0]).slice(startingIndex) : [];
-  console.log(StatusNames)
 
 
   //Callback function to receive csv data from CsvUpload
-  const handleCsvData = (data) => {
-    setCsvData(data);
-    console.log(data);
-    // Ensure data is an array before setting rows
-    if (Array.isArray(data)) {
-      setRows(data);
+  const handleCsvData = (newData) => {
+
+    if (Array.isArray(newData)) {
+        // currentRows is the most updated version of 'rows'
+        setRows((currentRows) => {
+            // Create a map of existing rows by some unique identifier, e.g., NNumber
+            const existingMap = new Map(currentRows.map(row => [row.NNumber, row]));
+
+            // Iterate over new data and add to the map if not already present
+            newData.forEach(row => {
+                if (!existingMap.has(row.NNumber)) {
+                    existingMap.set(row.NNumber, row);
+                }
+            }); 
+            return Array.from(existingMap.values());
+        });
     } else {
-      console.error("Received CSV data is not an array:", data);
+        console.error("Received CSV data is not an array:", newData);
     }
   };
 
-  
+
+
   //Load the table using datatable and reload when the rows changed
   const tableRef = useRef(null);
   useEffect(() => {
+    console.log("Reinitializing DataTables with rows:", rows);
     // Only proceed if the table is ready and the DOM is fully updated
     if (rows.length > 0) {
       const $dataTable = $(tableRef.current);
   
-      // Check if the DataTable instance already exists
       if ($.fn.dataTable.isDataTable($dataTable)) {
-        // If it exists, destroy it to prevent reinitialization errors
+        // If exists, destroy datatable for reinitialization 
         $dataTable.DataTable().destroy();
       }
   
       // Reinitialize DataTables on the next event loop tick to ensure the DOM is updated
       setTimeout(() => {
-        $dataTable.DataTable({
-          // Configuration options here
-        });
-      }, 0);
+        $dataTable.DataTable({});
+      }, 100);
     }
   
     // Cleanup function to destroy the DataTable instance
@@ -129,7 +135,7 @@ function Table() {
         <CsvUpload onCsvData={handleCsvData}> </CsvUpload>
 
         {/* Edit Mode & Save button*/}
-        <div className="editPositionController">
+        <div className="editPositionController" style={{ marginBottom: '70px', marginLeft: '-80px', marginTop: '-50px'}}>
           {isEditing ? (
             <button
               className="btn btn-secondary"
@@ -265,6 +271,8 @@ function Table() {
         </div>
 
         {/* Table */}
+       <div key={rows.length}> 
+         {/* React feature: force re-render the table everytime the key is changed */}
         <table ref={tableRef} className="table table-sm table-hover">
           <thead className="table-light">
             <tr>
@@ -428,6 +436,7 @@ function Table() {
             ))}
           </tbody>
         </table>
+        </div> 
       </div>
     </>
   );

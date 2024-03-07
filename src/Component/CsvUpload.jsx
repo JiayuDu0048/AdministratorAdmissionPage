@@ -1,10 +1,15 @@
 import React, { useState } from "react";
 import Papa from "papaparse";
 import axiosProvider from "../utils/axiosConfig";
+import PopupContent from "./popUpContent";
 
 function CsvUpload({onCsvData}) {
     const [dragging, setDragging] = useState(false);
     const [csvFile, setCsvFile] = useState(null);
+    const [message, setMessage] = useState('')
+    const [title, setTitle] = useState('')
+    const [showUploadMessage, setShowUploadMessage] = useState(false);
+
 
     // Remove the selected file
     const handleRemoveFile = () => {
@@ -85,12 +90,12 @@ function CsvUpload({onCsvData}) {
     const parseCsv = (file) => {
         Papa.parse(file, {
             complete: (result) => {
-                // Use callback function to send data from child to parent
                 const preprocessedData = preprocessData(result.data);
-                onCsvData(preprocessedData);
+                onCsvData(preprocessedData); // callback function: send data from child to parent
 
                 // After parsing, send the data to the backend
                 sendDataToBackend(preprocessedData);
+                setCsvFile(null);
             },
             header: true,
         });
@@ -99,14 +104,23 @@ function CsvUpload({onCsvData}) {
     // Function to send data to the backend
     const sendDataToBackend = async (data) => {
         // console.log("Sending data to the backend", JSON.stringify(data, null, 2))
+        setShowUploadMessage(true);
         try {
             const response = await axiosProvider.post("/populate/data", data, {
                 headers: {
                   'Content-Type': 'application/json'
                 }});
+            setTitle("Upload Success!");
+            setMessage("All entries have been uploaded.");
         } catch (error) {
+            setTitle("Upload Failed");
+            setMessage("Please try again later.");
             console.error("Error uploading data: ", error.response ? error.response.data : error);//if error.response exists, see the detailed data
         }
+        setTimeout(() => {
+            setShowUploadMessage(false);
+            setMessage(""); // Optionally reset the message if desired
+        }, 3000);
     };
 
     const handleUpload = () => {
@@ -131,7 +145,7 @@ function CsvUpload({onCsvData}) {
                     <>
                         <div className="row mb-3">
                             <div className="col">
-                                <span>File: {csvFile.name}</span>
+                                <span>{csvFile.name}</span>
                             </div>
                         </div>
                         <div className="row justify-content-end">
@@ -157,8 +171,14 @@ function CsvUpload({onCsvData}) {
                     </>
                 )}
             </div>
+            {showUploadMessage && <PopupContent 
+              message={message}
+              title={title}
+            />}
+
         </div>
     );
 }
 
 export default CsvUpload;
+
