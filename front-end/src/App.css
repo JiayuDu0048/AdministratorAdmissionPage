@@ -1,0 +1,95 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*Navbar customize*/
+.custom-navbar {
+  background-color: #57068C; 
+}
+
+.navbar-logo {
+  width: 300px; 
+  height: auto; 
+  margin-left: 20px;
+}
+
+/*Table margin customize*/
+.marginGlobal{
+  padding:15px
+}
+
+/*Upload button and text customize*/
+.styleUpload{
+  padding:15px;
+  border:2px dashed #b5b7ba;
+  border-radius: 10px;
+  margin-bottom: 30px;
+  display: flex;
+  justify-content: center;
+  align-items: center; 
+  height: 170px;
+}
+.textUpload{
+  margin-left: 20px;
+  color: #dee1e6;
+}
+
+/*Edit and Save customize*/
+.editPositionController{
+  position:relative;
+  bottom: -55px;
+  right: -90px;
+}
+
+
+/*select & Delete info customize*/
+.selected-info {
+      position: fixed;
+      bottom: 10px;
+      right: 10px;
+      color:#5f6871;
+      padding: 10px;
+      border-radius: 5px;
+      background-color: white;
+      border: 1px solid #dee1e6;
+    }
+
+/*checkbox customize*/
+input[type="checkbox"] {
+  -webkit-transform: scale(1.5); /* Safari Chrome */
+  -moz-transform: scale(1.5); /* Firefox */
+  -ms-transform: scale(1.5); /* IE 9 */
+  -o-transform: scale(1.5); /* Opera */
+  transform: scale(1.5);
+}
+
+/* status style*/
+.Green-glowing-dot {
+  width: 12px;
+  height: 12px;
+  margin-top: 7px;
+  border-radius: 50%;
+  background-color: #31b900; 
+  border: 0.5px solid #dee1e6;
+  display: inline-block; 
+  margin-right: 5px;}
+  .Green-text{
+    font-weight: 600;
+    color: #31b900;
+    display: inline-block;
+  }
+  .Red-glowing-dot {
+    width: 12px;
+    height: 12px;
+    margin-top: 7px;
+    border-radius: 50%;
+    background-color: #ff0000; 
+    border: 0.5px solid #dee1e6;
+
+    display: inline-block; 
+    margin-right: 5px;}
+    .Red-text{
+      font-weight: 600;
+      color: #ff0000;
+      display: inline-block;
+    }
