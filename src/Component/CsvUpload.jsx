@@ -144,18 +144,18 @@ function CsvUpload({onCsvData}) {
                 {csvFile ? (
                     <>
                         <div className="row mb-3">
-                            <div className="col">
+                            <div className="col text-center" style={{marginRight: '20px'}}>
                                 <span>{csvFile.name}</span>
                             </div>
                         </div>
                         <div className="row justify-content-end">
-                            <div className="col-6">
-                                <button onClick={handleRemoveFile} className="btn btn-danger btn-lg me-2">
+                            <div className="col-auto">
+                                <button onClick={handleRemoveFile} className="btn btn-danger btn-lg me-40" style={{ width: '100px' }}>
                                     Remove
                                 </button>
                             </div>
                             <div className="col-auto">
-                                <button type="button" className="btn btn-primary btn-lg" onClick={handleUpload}>
+                                <button type="button" className="btn btn-primary btn-lg" onClick={handleUpload} style={{ width: '100px' }}>
                                     Upload
                                 </button>
                             </div>

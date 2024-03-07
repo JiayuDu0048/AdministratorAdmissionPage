@@ -54,7 +54,7 @@ function Table() {
   
       // Reinitialize DataTables on the next event loop tick to ensure the DOM is updated
       setTimeout(() => {
-        $dataTable.DataTable({});
+        $dataTable.DataTable({responsive: true});
       }, 100);
     }
   
@@ -271,7 +271,7 @@ function Table() {
         </div>
 
         {/* Table */}
-       <div key={rows.length}> 
+       <div key={rows.length} className="table-responsive"> 
          {/* React feature: force re-render the table everytime the key is changed */}
         <table ref={tableRef} className="table table-sm table-hover">
           <thead className="table-light">
