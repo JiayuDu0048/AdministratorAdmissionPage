@@ -51,27 +51,37 @@ function Table() {
     const $dataTable = $(tableRef.current);
 
     if (!$.fn.dataTable.isDataTable($dataTable)) {
-        // Initialize DataTables only if it hasn't been initialized
-        $dataTable.DataTable({
-            responsive: true,
-            autoWidth: false
-            // Add other DataTables options here
-        });
+      // Initialize DataTables only if it hasn't been initialized
+      $dataTable.DataTable({
+        responsive: true,
+        autoWidth: false,
+        stateSave: true, // Enable state saving to remember the table's state
+        // Add other DataTables options here
+      });
     } else {
-        // If DataTables is already initialized, update its data
-        let dataTableInstance = $dataTable.DataTable();
-        dataTableInstance.clear(); // Clear previous data
-        dataTableInstance.rows.add(rows); // Add new data from the `rows` state
-        dataTableInstance.draw(); // Redraw the table
+      // DataTables is already initialized, so we manually manage updates
+      // to avoid destroying and reinitializing it.
+      let dataTableInstance = $dataTable.DataTable();
+
+      // Temporarily disable state saving to avoid saving state during data update
+      dataTableInstance.state.clear();
+
+      // Perform necessary data updates here. 
+      dataTableInstance.rows.add(rows).draw();
+
+      // Re-enable state saving after updates: this must work together with stateSave: true
+      dataTableInstance.state.save();
     }
 
-    // Cleanup function to destroy the DataTable instance on component unmount
+    // Cleanup function to destroy the DataTable instance on component unmount (Don't delete this!)
     return () => {
-        if ($.fn.dataTable.isDataTable($dataTable)) {
-            $dataTable.DataTable().destroy();
-        }
+      if ($.fn.dataTable.isDataTable($dataTable)) {
+        $dataTable.DataTable().destroy();
+      }
     };
-}, [rows]); // Only re-run when `rows` changes
+  }, [rows]); // Only re-run when `rows` changes
+
+
 
   
 
