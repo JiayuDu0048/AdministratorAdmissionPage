@@ -49,6 +49,8 @@ function CsvUpload({onCsvData}) {
     };
 
     const preprocessData = (data) => {
+        // Filter the csv header & empty lines
+        data = data.filter(row => row["Campus ID"] !== "Campus ID" && row["Last"] !== "");
         return data.map(row => {
             // Extracting session number
             let sessionNumber = null;

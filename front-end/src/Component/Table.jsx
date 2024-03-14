@@ -14,7 +14,14 @@ function Table() {
   // const StatusNames = Object.keys(rows[0]).slice(startingIndex);
   const StatusNames = rows[0] ? Object.keys(rows[0]).slice(startingIndex) : [];
 
-
+  const handleEmailUpdate = (NNumber, newEmail) => {
+    setRows(currentRows =>
+      currentRows.map(row => 
+        row.NNumber === NNumber ? { ...row, Email: newEmail } : row
+      )
+    );
+  };
+ 
   //Callback function to receive csv data from CsvUpload
   const handleCsvData = (newData) => {
 
@@ -38,34 +45,44 @@ function Table() {
   };
 
 
-
   //Load the table using datatable and reload when the rows changed
   const tableRef = useRef(null);
   useEffect(() => {
-    console.log("Reinitializing DataTables with rows:", rows);
-    // Only proceed if the table is ready and the DOM is fully updated
-    if (rows.length > 0) {
-      const $dataTable = $(tableRef.current);
-  
+    const $dataTable = $(tableRef.current);
+
+    if (!$.fn.dataTable.isDataTable($dataTable)) {
+      // Initialize DataTables only if it hasn't been initialized
+      $dataTable.DataTable({
+        responsive: true,
+        autoWidth: false,
+        stateSave: true, // Enable state saving to remember the table's state
+        // Add other DataTables options here
+      });
+    } else {
+      // DataTables is already initialized, so we manually manage updates
+      // to avoid destroying and reinitializing it.
+      let dataTableInstance = $dataTable.DataTable();
+
+      // Temporarily disable state saving to avoid saving state during data update
+      dataTableInstance.state.clear();
+
+      // Perform necessary data updates here. 
+      dataTableInstance.rows.add(rows).draw();
+
+      // Re-enable state saving after updates: this must work together with stateSave: true
+      dataTableInstance.state.save();
+    }
+
+    // Cleanup function to destroy the DataTable instance on component unmount (Don't delete this!)
+    return () => {
       if ($.fn.dataTable.isDataTable($dataTable)) {
-        // If exists, destroy datatable for reinitialization 
         $dataTable.DataTable().destroy();
       }
-  
-      // Reinitialize DataTables on the next event loop tick to ensure the DOM is updated
-      setTimeout(() => {
-        $dataTable.DataTable({responsive: true});
-      }, 100);
-    }
-  
-    // Cleanup function to destroy the DataTable instance
-    return () => {
-      if ($.fn.dataTable.isDataTable(tableRef.current)) {
-        $(tableRef.current).DataTable().destroy();
-      }
     };
-  }, [rows]); // Dependency on 'rows' to re-run when data changes
-  
+  }, [rows]); // Only re-run when `rows` changes
+
+
+
   
 
   //multiple choice and delete function
@@ -93,15 +110,16 @@ function Table() {
     // 添加保存编辑内容的代码
   }
 
-  const handleStatusChange = (id, StatusName, newStatus) => {
+  const handleStatusChange = (NNumber, StatusName, newStatus) => { 
     const updatedData = rows.map((row) => {
-      if (row.id === id) {
+      if (row.NNumber === NNumber) {
         return { ...row, [StatusName]: newStatus };
       }
       return row;
     });
     setRows(updatedData);
-  };
+  }; 
+  
 
   //session change function
   const getStatus = (session) => {
@@ -126,7 +144,7 @@ function Table() {
       return false;
     }
   };
-
+ 
 
   return (
     <>
@@ -150,6 +168,7 @@ function Table() {
                 paddingLeft: 32,
                 alignItems: "center",
               }}
+              type="button"
             >
               Save
             </button>
@@ -165,6 +184,7 @@ function Table() {
                 alignItems: "center",
               }}
               onClick={handleEditClick}
+              type="button"
             >
               Edit
             </button>
@@ -363,7 +383,7 @@ function Table() {
           </thead>
           <tbody>
             { rows.map((row) => (
-              <tr key={row.id}>
+              <tr key={row.NNumber}>
                 <th scope="row">
                   <input
                     type="checkbox"
@@ -377,10 +397,8 @@ function Table() {
                   {isEditing ? (
                     <input
                       type="text"
-                      value={row.Email}
-                      onChange={(e) =>
-                        handleStatusChange(row.id, "Email", e.target.value)
-                      }
+                      defaultValue={row.Email}
+                      onBlur={(e) => handleEmailUpdate(row.NNumber, e.target.value)}
                     />
                   ) : (
                     row.Email
@@ -391,7 +409,7 @@ function Table() {
                     <select
                       value={row.Session}
                       onChange={(e) =>
-                        handleStatusChange(row.id, "session", e.target.value)
+                        handleStatusChange(row.NNumber, "Session", e.target.value)
                       }
                     >
                       <option value="1">1</option>
@@ -409,11 +427,13 @@ function Table() {
                       <select
                         value={row[StatusName]}
                         onChange={(e) =>
-                          handleStatusChange(row.id, StatusName, e.target.value)
+                          handleStatusChange(row.NNumber, StatusName, e.target.value)
                         }
                       >
-                        <option value="Finished">Finished</option>
+                        {/* <option value=""></option> */}
                         <option value="Unfinished">Unfinished</option>
+                        <option value="Finished">Finished</option>
+                       
                       </select>
                     ) : (
                       <div>
