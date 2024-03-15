@@ -6,21 +6,99 @@ import "datatables.net-bs5";
 import 'bootstrap/dist/js/bootstrap.bundle'; //Change the above line to relative path-> more compatible
 import "@popperjs/core";
 import CsvUpload from "./CSVupload";
+import axiosProvider from "../utils/axiosConfig";
 
 function Table() {
-  const [rows, setRows] = useState([]);
-
   const startingIndex = 5;
   // const StatusNames = Object.keys(rows[0]).slice(startingIndex);
+  const [rows, setRows] = useState([]);
   const StatusNames = rows[0] ? Object.keys(rows[0]).slice(startingIndex) : [];
+  const [pendingChanges, setPendingChanges] = useState({ emailUpdates: {}, statusUpdates: {} });
 
-  const handleEmailUpdate = (NNumber, newEmail) => {
+  //Save pending changes function
+  const accumulateEmailChange = (NNumber, newEmail) => {
     setRows(currentRows =>
-      currentRows.map(row => 
-        row.NNumber === NNumber ? { ...row, Email: newEmail } : row
-      )
-    );
+      currentRows.map(row =>
+        row.NNumber === NNumber ? { ...row, Email: newEmail} : row));
+
+    setPendingChanges(prev => ({
+      ...prev,
+      emailUpdates: { ...prev.emailUpdates, [NNumber]: newEmail }
+    }));
   };
+
+  const accumulateStatusChange = (NNumber, StatusName, newStatus) => {
+    setRows(currentRows =>
+      currentRows.map(row =>
+        row.NNumber === NNumber ? { ...row, [StatusName]: newStatus } : row
+      ));
+
+    setPendingChanges(prev => ({
+      ...prev,
+      statusUpdates: { ...prev.statusUpdates, [NNumber]: { ...prev.statusUpdates[NNumber], [StatusName]: newStatus } }
+    }));
+  };
+
+  //Edit Mode function
+  const [isEditing, setIsEditing] = useState(false);
+  function handleEditClick() {
+    setIsEditing(true);
+  }
+  const handleSaveClick = async () =>{
+    setIsEditing(false);
+    const responses = [];
+
+    try {
+      for (const NNumber of Object.keys(pendingChanges.emailUpdates)){
+        const newEmail = pendingChanges.emailUpdates[NNumber];
+        const response = await axiosProvider.post('/api/updateEmail', { NNumber, newEmail }, {
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+        // Add response after waiting is settled
+        responses.push(response);
+      }
+   
+      for (const NNumber of Object.keys(pendingChanges.statusUpdates)){
+        for (const StatusName of Object.keys(pendingChanges.statusUpdates[NNumber])) {
+          const newStatus = pendingChanges.statusUpdates[NNumber][StatusName];
+          const response = await axiosProvider.post('/api/updateStatus', { NNumber, StatusName, newStatus }, {
+            headers: {
+              'Content-Type': 'application/json'
+            }
+          });
+          responses.push(response);
+        }
+      }
+      
+      const results = await Promise.all(responses); // Don't necessarily need this, since we have previous await before adding to responses
+      const allSuccess = results.every(result => result.status >= 200 && result.status < 300);
+      console.log(results);
+      
+      // If all successful, update the main rows state with the pending changes
+      if(allSuccess){
+        setRows(currentRows => currentRows.map(row => {
+          const emailUpdate = pendingChanges.emailUpdates[row.NNumber];
+          const statusUpdate = pendingChanges.statusUpdates[row.NNumber];
+          return {
+            ...row,
+            Email: emailUpdate || row.Email,
+            ...statusUpdate
+          };
+        }));
+      }else{
+        //TODO: set error message window
+      }
+  
+      // Reset pending changes
+      setPendingChanges({ emailUpdates: {}, statusUpdates: {} });
+      console.log("Changes saved to backend successfully.");
+    } catch (error) {
+      console.error("Failed to save changes", error);
+    }
+  }
+
  
   //Callback function to receive csv data from CsvUpload
   const handleCsvData = (newData) => {
@@ -43,7 +121,6 @@ function Table() {
         console.error("Received CSV data is not an array:", newData);
     }
   };
-
 
   //Load the table using datatable and reload when the rows changed
   const tableRef = useRef(null);
@@ -81,11 +158,9 @@ function Table() {
     };
   }, [rows]); // Only re-run when `rows` changes
 
-
-
   
 
-  //multiple choice and delete function
+  //Multiple choice and delete function
   const [selectedRows, setSelectedRows] = useState([]);
   function handleCheckboxChange(rowId) {
     if (selectedRows.includes(rowId)) {
@@ -100,28 +175,9 @@ function Table() {
     setRows(updatedRows);
   }
 
-  //Edit Mode function
-  const [isEditing, setIsEditing] = useState(false);
-  function handleEditClick() {
-    setIsEditing(true);
-  }
-  function handleSaveClick() {
-    setIsEditing(false);
-    // 添加保存编辑内容的代码
-  }
 
-  const handleStatusChange = (NNumber, StatusName, newStatus) => { 
-    const updatedData = rows.map((row) => {
-      if (row.NNumber === NNumber) {
-        return { ...row, [StatusName]: newStatus };
-      }
-      return row;
-    });
-    setRows(updatedData);
-  }; 
-  
 
-  //session change function
+  //Session change function
   const getStatus = (session) => {
     const sessionStr = String(session);
 
@@ -136,7 +192,7 @@ function Table() {
     }
   };
 
-  //status detect
+  //Status detect function
   const IsFinished = (status) => {
     if (status === "Finished") {
       return true;
@@ -219,7 +275,7 @@ function Table() {
                   className="btn btn-secondary"
                   data-bs-dismiss="modal"
                 >
-                  Discard
+                  Go Back
                 </button>
                 <button
                   onClick={handleSaveClick}
@@ -398,7 +454,7 @@ function Table() {
                     <input
                       type="text"
                       defaultValue={row.Email}
-                      onBlur={(e) => handleEmailUpdate(row.NNumber, e.target.value)}
+                      onBlur={(e) => accumulateEmailChange(row.NNumber, e.target.value)}
                     />
                   ) : (
                     row.Email
@@ -409,7 +465,7 @@ function Table() {
                     <select
                       value={row.Session}
                       onChange={(e) =>
-                        handleStatusChange(row.NNumber, "Session", e.target.value)
+                        accumulateStatusChange(row.NNumber, "Session", e.target.value)
                       }
                     >
                       <option value="1">1</option>
@@ -427,7 +483,7 @@ function Table() {
                       <select
                         value={row[StatusName]}
                         onChange={(e) =>
-                          handleStatusChange(row.NNumber, StatusName, e.target.value)
+                          accumulateStatusChange(row.NNumber, StatusName, e.target.value)
                         }
                       >
                         {/* <option value=""></option> */}
