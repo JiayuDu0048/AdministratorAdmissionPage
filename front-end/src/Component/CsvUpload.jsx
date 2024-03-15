@@ -77,12 +77,12 @@ function CsvUpload({onCsvData}) {
                 Email: row["Email"],
                 Session: sessionNumber,
                 SessionModality: sessionModality,
-                //Update these fields from admin
-                AdmissionStatus: "",
-                MatriculationStatus: "",
-                UnityStatus: "",
-                CourseraStatus: "",
-                SurveyStatus: "" 
+                // the admin will update these fields weekly, default value = "Unfinished"
+                AdmissionStatus: "Unfinished",
+                MatriculationStatus: "Unfinished",
+                UnityStatus: "Unfinished",
+                CourseraStatus: "Unfinished",
+                SurveyStatus: "Unfinished" 
             };
         });
     };

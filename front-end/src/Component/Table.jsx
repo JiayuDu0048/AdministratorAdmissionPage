@@ -9,10 +9,18 @@ import CsvUpload from "./CSVupload";
 import axiosProvider from "../utils/axiosConfig";
 
 function Table() {
+  const startingIndex = 5;
+  // const StatusNames = Object.keys(rows[0]).slice(startingIndex);
   const [rows, setRows] = useState([]);
+  const StatusNames = rows[0] ? Object.keys(rows[0]).slice(startingIndex) : [];
   const [pendingChanges, setPendingChanges] = useState({ emailUpdates: {}, statusUpdates: {} });
 
+  //Save pending changes function
   const accumulateEmailChange = (NNumber, newEmail) => {
+    setRows(currentRows =>
+      currentRows.map(row =>
+        row.NNumber === NNumber ? { ...row, Email: newEmail} : row));
+
     setPendingChanges(prev => ({
       ...prev,
       emailUpdates: { ...prev.emailUpdates, [NNumber]: newEmail }
@@ -20,15 +28,76 @@ function Table() {
   };
 
   const accumulateStatusChange = (NNumber, StatusName, newStatus) => {
+    setRows(currentRows =>
+      currentRows.map(row =>
+        row.NNumber === NNumber ? { ...row, [StatusName]: newStatus } : row
+      ));
+
     setPendingChanges(prev => ({
       ...prev,
       statusUpdates: { ...prev.statusUpdates, [NNumber]: { ...prev.statusUpdates[NNumber], [StatusName]: newStatus } }
     }));
   };
 
-  const startingIndex = 5;
-  // const StatusNames = Object.keys(rows[0]).slice(startingIndex);
-  const StatusNames = rows[0] ? Object.keys(rows[0]).slice(startingIndex) : [];
+  //Edit Mode function
+  const [isEditing, setIsEditing] = useState(false);
+  function handleEditClick() {
+    setIsEditing(true);
+  }
+  const handleSaveClick = async () =>{
+    setIsEditing(false);
+    const responses = [];
+
+    try {
+      for (const NNumber of Object.keys(pendingChanges.emailUpdates)){
+        const newEmail = pendingChanges.emailUpdates[NNumber];
+        const response = await axiosProvider.post('/api/updateEmail', { NNumber, newEmail }, {
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+        // Add response after waiting is settled
+        responses.push(response);
+      }
+   
+      for (const NNumber of Object.keys(pendingChanges.statusUpdates)){
+        for (const StatusName of Object.keys(pendingChanges.statusUpdates[NNumber])) {
+          const newStatus = pendingChanges.statusUpdates[NNumber][StatusName];
+          const response = await axiosProvider.post('/api/updateStatus', { NNumber, StatusName, newStatus }, {
+            headers: {
+              'Content-Type': 'application/json'
+            }
+          });
+          responses.push(response);
+        }
+      }
+      
+      const results = await Promise.all(responses); // Don't necessarily need this, since we have previous await before adding to responses
+      const allSuccess = results.every(result => result.status >= 200 && result.status < 300);
+      console.log(results);
+      
+      // If all successful, update the main rows state with the pending changes
+      if(allSuccess){
+        setRows(currentRows => currentRows.map(row => {
+          const emailUpdate = pendingChanges.emailUpdates[row.NNumber];
+          const statusUpdate = pendingChanges.statusUpdates[row.NNumber];
+          return {
+            ...row,
+            Email: emailUpdate || row.Email,
+            ...statusUpdate
+          };
+        }));
+      }else{
+        //TODO: set error message window
+      }
+  
+      // Reset pending changes
+      setPendingChanges({ emailUpdates: {}, statusUpdates: {} });
+      console.log("Changes saved to backend successfully.");
+    } catch (error) {
+      console.error("Failed to save changes", error);
+    }
+  }
 
  
   //Callback function to receive csv data from CsvUpload
@@ -91,7 +160,7 @@ function Table() {
 
   
 
-  //multiple choice and delete function
+  //Multiple choice and delete function
   const [selectedRows, setSelectedRows] = useState([]);
   function handleCheckboxChange(rowId) {
     if (selectedRows.includes(rowId)) {
@@ -108,55 +177,7 @@ function Table() {
 
 
 
-
-  //Edit Mode function
-  const [isEditing, setIsEditing] = useState(false);
-  function handleEditClick() {
-    setIsEditing(true);
-  }
-  const handleSaveClick = async () =>{
-    setIsEditing(false);
-
-    try {
-      const response = await Promise.all([
-        axiosProvider.post('/api/updateEmail', pendingChanges.emailUpdates, {
-          headers: {
-            'Content-Type': 'application/json'
-          }
-        }),
-        axiosProvider.post('/api/updateStatus', pendingChanges.statusUpdates, {
-          headers: {
-            'Content-Type': 'application/json'
-          }
-        })
-      ]);
-      
-      const allSuccess = response.every(response => response.status >= 200 && response.status < 300);
-      // If all successful, update the main rows state with the pending changes
-      if(allSuccess){
-        setRows(currentRows => currentRows.map(row => {
-          const emailUpdate = pendingChanges.emailUpdates[row.NNumber];
-          const statusUpdate = pendingChanges.statusUpdates[row.NNumber];
-          return {
-            ...row,
-            Email: emailUpdate || row.Email,
-            ...statusUpdate
-          };
-        }));
-      }else{
-        //TODO: set error message window
-      }
-  
-      // Reset pending changes
-      setPendingChanges({ emailUpdates: {}, statusUpdates: {} });
-      console.log("Changes saved to backend successfully.");
-    } catch (error) {
-      console.error("Failed to save changes", error);
-    }
-  }
-  
-
-  //session change function
+  //Session change function
   const getStatus = (session) => {
     const sessionStr = String(session);
 
@@ -171,7 +192,7 @@ function Table() {
     }
   };
 
-  //status detect
+  //Status detect function
   const IsFinished = (status) => {
     if (status === "Finished") {
       return true;
@@ -254,7 +275,7 @@ function Table() {
                   className="btn btn-secondary"
                   data-bs-dismiss="modal"
                 >
-                  Discard
+                  Go Back
                 </button>
                 <button
                   onClick={handleSaveClick}
