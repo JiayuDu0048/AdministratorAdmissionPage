@@ -1,3 +1,7 @@
+/*Don't need to remove these 3, otherwise it will cause format issues*/
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 /*Navbar customize*/
 .custom-navbar {
