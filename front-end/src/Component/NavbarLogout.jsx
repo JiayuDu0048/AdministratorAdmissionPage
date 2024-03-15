@@ -1,4 +1,4 @@
-function Navbar() {
+function NavbarLogout() {
   return (
     <>
       <nav className="navbar custom-navbar ">
@@ -12,10 +12,15 @@ function Navbar() {
               ></img>
             </a>
           </div>
+          <div className="justify-content-end">
+            <button className="btn btn-secondary" type="button">
+              Log Out
+            </button>
+          </div>
         </div>
       </nav>
     </>
   );
 }
 
-export default Navbar;
+export default NavbarLogout;
