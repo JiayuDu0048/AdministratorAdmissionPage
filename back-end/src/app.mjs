@@ -10,6 +10,7 @@ import session from 'express-session';
 import mongoose from 'mongoose';  
 import passport from 'passport'
 import populateDataRouter from './routes/populateDataRouter.mjs';
+import updateRouter from './routes/updateRouter.mjs'
 // import CustomJwtStrategy from './config/jwt-config.mjs';
 
 const app = express();
@@ -28,7 +29,7 @@ dotenv.config({ path: path.resolve(__dirname, '../.env') });
 const corsOptions = {
   credentials: true,
   origin: process.env.CLIENT_URL.replace(/\/$/, ""),
-  methods: ['GET', 'PUT', 'POST', 'DELETE', 'PATCH']
+  methods: ['GET', 'PUT', 'POST', 'DELETE', 'PATCH'],
 }
 app.use(cors(corsOptions));
 
@@ -40,9 +41,11 @@ mongoose.connect(process.env.MONGODB_URI, { useNewUrlParser: true, useUnifiedTop
   })
   .catch(err => console.error('Could not connect to MongoDB...', err));
 
-
+ 
 // Routers
+app.use('/api', updateRouter);
 app.post('/populate/data', populateDataRouter);
+
 
 
 // session to auto-save user data (like id) when they login
