@@ -11,6 +11,7 @@ import mongoose from 'mongoose';
 import passport from 'passport'
 import populateDataRouter from './routes/populateDataRouter.mjs';
 import updateRouter from './routes/updateRouter.mjs'
+import deleteRowsRouter from './routes/deleteRowsRouter.mjs';
 // import CustomJwtStrategy from './config/jwt-config.mjs';
 
 const app = express();
@@ -45,6 +46,7 @@ mongoose.connect(process.env.MONGODB_URI, { useNewUrlParser: true, useUnifiedTop
 // Routers
 app.use('/api', updateRouter);
 app.post('/populate/data', populateDataRouter);
+app.delete('/delete/rows', deleteRowsRouter);
 
 
 

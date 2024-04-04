@@ -1,4 +1,6 @@
+![steinhardt_color](https://github.com/JiayuDu0048/AdministratorAdmissionPage/assets/100020447/9fa55ddc-bcaa-4c96-b179-a81d32fce622)
 # To run the frontend:
+
 Open the terminal, run the following:
 - cd AdministratorAdmissionPage/front-end/src
 - npm install

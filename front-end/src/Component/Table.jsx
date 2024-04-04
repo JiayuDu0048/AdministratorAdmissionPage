@@ -162,19 +162,39 @@ function Table() {
 
   //Multiple choice and delete function
   const [selectedRows, setSelectedRows] = useState([]);
-  function handleCheckboxChange(rowId) {
-    if (selectedRows.includes(rowId)) {
-      setSelectedRows(selectedRows.filter((id) => id !== rowId));
+  function handleCheckboxChange(rowNNumber) {
+    if (selectedRows.includes(rowNNumber)) {
+      setSelectedRows(selectedRows.filter((NNumber) => NNumber !== rowNNumber));
     } else {
-      setSelectedRows([...selectedRows, rowId]);
+      setSelectedRows([...selectedRows, rowNNumber]);
     }
   }
-  function deleteSelectedRows() {
-    const updatedRows = rows.filter((row) => !selectedRows.includes(row.id));
-    setSelectedRows([]);
+  const deleteSelectedRows =  async () => {
+    const updatedRows = rows.filter((row) => !selectedRows.includes(row.NNumber));
     setRows(updatedRows);
+    
+    //Call backend deletion router
+    try{
+        const response = await axiosProvider.delete('delete/rows', {
+        data: {selectedNNumbers: selectedRows},
+        headers: {
+          'Content-Type': 'application/json'
+        }
+        })
+  
+        if (response.status === 200) {
+          console.log("Rows deleted successfully:", response.data);
+          // Optionally, fetch updated rows from the backend or remove them from the state directly
+          const updatedRows = rows.filter((row) => !selectedRows.includes(row.NNumber));
+          setRows(updatedRows);
+        } else {
+            console.error("Failed to delete rows");
+        }
+    }catch(error){
+      console.error("Error deleting rows:", error);
+    }  
+    setSelectedRows([]);
   }
-
 
 
   //Session change function
@@ -444,7 +464,7 @@ function Table() {
                   <input
                     type="checkbox"
                     className="row-checkbox"
-                    onClick={() => handleCheckboxChange(row.id)}
+                    onClick={() => handleCheckboxChange(row.NNumber)}
                   />
                 </th>
                 <td>{row.NNumber}</td>
