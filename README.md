@@ -12,12 +12,12 @@ Open another window in the terminal, run the following:
 - npm install
 - npm start
 
-# In addition, please create a .env file in the back-end directory. This file should contain: 
+#### In addition, please create a .env file in the back-end directory. This file should contain: 
 - CLIENT_URL
 - MONGODB_URI
 - SERVER_PORT
 - SERVER_URL
-# If you need help with these setup information, please email tz2074@nyu.edu or contact Lesley Zhao in Slack.
+#### If you need help with these setup information, please email tz2074@nyu.edu or contact Lesley Zhao in Slack.
 
 # React + Vite
 
