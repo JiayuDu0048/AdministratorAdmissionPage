@@ -1,5 +1,7 @@
 ![steinhardt_color](https://github.com/JiayuDu0048/AdministratorAdmissionPage/assets/100020447/9fa55ddc-bcaa-4c96-b179-a81d32fce622)
 
+<br>
+
 # About This Page
 The AdministratorAdmissionPage is a web platform developed for administrators at NYU to effectively manage and track the admission details of students participating in the summer Unity Program. The program, aimed at high school students interested in game design and coding, offers a comprehensive curriculum that blends principles of game design with hands-on coding experience using C# and Unity.
 
