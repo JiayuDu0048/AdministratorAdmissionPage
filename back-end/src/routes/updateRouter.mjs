@@ -66,7 +66,8 @@ router.post('/updateStatus', async (req, res) => {
 
 //Update only Unity Status Endpoint
 router.post('/updateOnlyUnityStatus', async(req, res) => {
-  const { NNumber} = req.body;
+  //Include NNumber as a query param, http://localhost:3001/api/updateOnlyUnityStatus?NNumber= xxx
+  const NNumber = req.query.NNumber;
   try{
     const update = {"UnityStatus": true}
     const result = await Student.findOneAndUpdate({ NNumber }, update, { new: true });
