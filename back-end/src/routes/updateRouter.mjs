@@ -54,6 +54,16 @@ router.post('/updateStatus', async (req, res) => {
   }
 });
 
+router.post('/updateOnlyUnityStatus', async(req, res) => {
+  const { NNumber} = req.body;
+  try{
+    const update = {"UnityStatus": "finished"}
+    const result = await Student.findOneAndUpdate({ NNumber }, update, { new: true });
+    res.json(result);
+  }catch(error){
+    res.status(500).json({ message: error.message });
+  }
+});
 
 
 export default router;
