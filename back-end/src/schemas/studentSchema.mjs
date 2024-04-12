@@ -6,11 +6,11 @@ const studentSchema = new mongoose.Schema({
   Email: String,
   Session: {type: String, default: null},
   SessionModality: String,
-  AdmissionStatus: { type: String, default: "" },
-  MatriculationStatus: { type: String, default: "" },
-  UnityStatus: { type: String, default: "" },
-  CourseraStatus: { type: String, default: "" },
-  SurveyStatus: { type: String, default: "" }
+  AdmissionStatus: { type: Boolean, default: false },
+  MatriculationStatus: { type: Boolean, default: false },
+  UnityStatus: { type: Boolean, default: false },
+  CourseraStatus: { type: Boolean, default: false },
+  SurveyStatus: { type: Boolean, default: false }
 });
 
 // Create a table called 'Student', with our defined schemas
