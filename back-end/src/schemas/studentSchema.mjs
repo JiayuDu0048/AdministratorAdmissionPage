@@ -10,7 +10,9 @@ const studentSchema = new mongoose.Schema({
   MatriculationStatus: { type: Boolean, default: false },
   UnityStatus: { type: Boolean, default: false },
   CourseraStatus: { type: Boolean, default: false },
-  SurveyStatus: { type: Boolean, default: false }
+  SurveyStatus: { type: Boolean, default: false },
+  deleted: { type: Boolean, default: false },
+  deletedAt: { type: Date }
 });
 
 // Create a table called 'Student', with our defined schemas
