@@ -37,9 +37,18 @@ router.post('/updateEmail', async (req, res) => {
   }
 });
 
-// Update status endpoint
+// Update all status endpoint
 router.post('/updateStatus', async (req, res) => {
-  const { NNumber, StatusName, newStatus } = req.body;
+  const { NNumber, StatusName} = req.body;
+
+  // Convert "Finished" or "Unfinished" to true or false
+  let newStatus = req.body.newStatus;
+  if (newStatus === "Finished") {
+    newStatus = true;
+  } else if (newStatus === "Unfinished") {
+    newStatus = false;
+  }
+
   try {
     const update = { [StatusName]: newStatus };
     const result = await Student.findOneAndUpdate({ NNumber }, update, { new: true });
@@ -54,10 +63,13 @@ router.post('/updateStatus', async (req, res) => {
   }
 });
 
+
+//Update only Unity Status Endpoint
 router.post('/updateOnlyUnityStatus', async(req, res) => {
-  const { NNumber} = req.body;
+  //Include NNumber as a query param, http://localhost:3001/api/updateOnlyUnityStatus?NNumber= xxx
+  const NNumber = req.query.NNumber;
   try{
-    const update = {"UnityStatus": "finished"}
+    const update = {"UnityStatus": true}
     const result = await Student.findOneAndUpdate({ NNumber }, update, { new: true });
     res.json(result);
   }catch(error){

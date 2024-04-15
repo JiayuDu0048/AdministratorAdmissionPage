@@ -169,6 +169,8 @@ function Table() {
       setSelectedRows([...selectedRows, rowNNumber]);
     }
   }
+
+
   const deleteSelectedRows =  async () => {
     const updatedRows = rows.filter((row) => !selectedRows.includes(row.NNumber));
     setRows(updatedRows);
@@ -181,12 +183,16 @@ function Table() {
           'Content-Type': 'application/json'
         }
         })
-  
+        
         if (response.status === 200) {
-          console.log("Rows deleted successfully:", response.data);
-          // Optionally, fetch updated rows from the backend or remove them from the state directly
-          const updatedRows = rows.filter((row) => !selectedRows.includes(row.NNumber));
-          setRows(updatedRows);
+          console.log("Rows marked as deleted successfully:", response.data);
+          // Update rows to mark as deleted instead of removing them
+          const updatedRows = rows.map(row => {
+            if (selectedRows.includes(row.NNumber)) {
+              return { ...row, deleted: true }; 
+            }
+            return row;
+          });
         } else {
             console.error("Failed to delete rows");
         }
@@ -196,7 +202,7 @@ function Table() {
     setSelectedRows([]);
   }
 
-
+ 
   //Session change function
   const getStatus = (session) => {
     const sessionStr = String(session);

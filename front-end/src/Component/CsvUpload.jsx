@@ -78,11 +78,11 @@ function CsvUpload({onCsvData}) {
                 Session: sessionNumber,
                 SessionModality: sessionModality,
                 // the admin will update these fields weekly, default value = "Unfinished"
-                AdmissionStatus: "Unfinished",
-                MatriculationStatus: "Unfinished",
-                UnityStatus: "Unfinished",
-                CourseraStatus: "Unfinished",
-                SurveyStatus: "Unfinished" 
+                AdmissionStatus: false,
+                MatriculationStatus: false,
+                UnityStatus: false,
+                CourseraStatus: false,
+                SurveyStatus: false
             };
         });
     };

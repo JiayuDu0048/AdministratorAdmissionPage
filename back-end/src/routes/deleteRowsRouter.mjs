@@ -6,10 +6,14 @@ const deleteRowsRouter = async(req, res) => {
 
     try {
         // Select documents where 'NNumber' is in the 'selectedNNumbers' array
-        const deletionResult = await Student.deleteMany({ NNumber: { $in: selectedNNumbers } });
+        // const deletionResult = await Student.deleteMany({ NNumber: { $in: selectedNNumbers } });
+        const softDeleteResult = await Student.updateMany(
+            { NNumber: { $in: selectedNNumbers } },
+            { $set: { deleted: true, deletedAt: new Date() } }
+          );
 
-        if (deletionResult.deletedCount > 0) {
-            res.status(200).json({ message: `${deletionResult.deletedCount} rows deleted successfully.` });
+        if (softDeleteResult.nModified > 0) {
+            res.status(200).json({ message: `${softDeleteResult.nModified} rows marked as deleted.`  });
         } else {
             res.status(404).json({ message: "No rows found to delete." });
         }
