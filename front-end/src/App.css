@@ -9,8 +9,9 @@
 }
 
 .navbar-logo {
-  width: 300px; 
+  width: 330px; 
   height: auto; 
+  padding: 20px;
   margin-left: 20px;
 }
 /*LoginPage*/

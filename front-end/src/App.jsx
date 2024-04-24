@@ -30,4 +30,31 @@ function App() {
   );
 }
 
+
+// TODO: Need to change header based on isLoggedIn
+// function App() {
+//   // Simulated authentication state
+//   const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+//   // Handlers to simulate login and logout
+//   const handleLogin = () => setIsLoggedIn(true);
+//   const handleLogout = () => setIsLoggedIn(false);
+
+//   return (
+//     <Router>
+//       <div>
+//         {/* Conditionally display Navbar based on login status */}
+//         {isLoggedIn ? <NavbarLogout onLogout={handleLogout} /> : <Navbar />}
+
+//         {/* Routes for different components */}
+//         <Routes>
+//           <Route path="/" element={<LoginPage onLogin={handleLogin} />} />
+//           <Route path="/table" element={<Table />} />
+//         </Routes>
+//       </div>
+//     </Router>
+//   );
+// }
+
+
 export default App;
