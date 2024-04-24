@@ -6,12 +6,14 @@ import Navbar from "./Component/Navbar";
 import NavbarLogout from "./Component/NavbarLogout";
 import Table from "./Component/Table";
 import LoginPage from "./Component/LoginPage";
+import Dashboard from "./Component/charts/DashboardScreen";
+import BaseLayout from "./layouts/BaseLayout";
 
 function App() {
   return (
     <Router>
       <div>
-        <Routes>
+        <Routes element={<BaseLayout />}>
           <Route path="/" element={<HomePage />} />
           <Route path="/table" element={<TablePage />} />
         </Routes>
@@ -35,6 +37,7 @@ function TablePage() {
   return (
     <>
       <NavbarLogout />
+      <Dashboard />
       <Table />
     </>
   );
