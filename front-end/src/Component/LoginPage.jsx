@@ -48,7 +48,7 @@ function LoginPage() {
 return (
   <div className="login-container" >
     <div className="login-box" >
-      <p className="loginHead">Login with Dream account</p>
+      <p className="loginHead">Login with Dream account 💭</p>
       
       {showError && (
            <div className="alertBox" style={{ textAlign: 'center', alignContent: 'center' }}>
