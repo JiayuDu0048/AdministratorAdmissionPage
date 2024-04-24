@@ -3,10 +3,9 @@ import { useNavigate } from 'react-router-dom';
 function NavbarLogout() {
   const navigate = useNavigate();
 
-  //TODO
   const handleLogout = () => {
-    // Perform logout logic if any (e.g., clearing auth tokens)
-    
+    // clearing auth tokens
+    localStorage.removeItem('token');
     // Redirect to the root route
     navigate('/');
   };
