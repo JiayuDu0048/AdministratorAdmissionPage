@@ -9,63 +9,41 @@ function LoginPage() {
   const navigate = useNavigate();
 
 
-  // Helper function to set cookies - we can define this function outside of our component
-  function setCookie(name, value, days) {
-    let expires = "";
-    if (days) {
-      const date = new Date();
-      date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
-      expires = "; expires=" + date.toUTCString();
-    }
-    document.cookie = name + "=" + (value || "") + expires + "; path=/";
-  }
-
   async function login(e) {
     e.preventDefault(); // Prevent the default form submission behavior
-    const invalid = document.getElementById("invalid");
     setShowError(false);
 
     if (email === "" || password === "") {
+      setError("Both email and password are required, please try again.")
       setShowError(true);
       return;
     }
 
     try {
-      const response = await fetch('https://create.nyu.edu/dreamx/public/api/auth/login', {
+      const response = await fetch('https://create.nyu.edu/dreamx/public/api/auth/login', { 
         method: "POST",
         body: JSON.stringify({ email, password }),
         headers: {
           "Content-Type": "application/json"
-        }
+        },
+        credentials: 'include' // Necessary for cookies to be set
       });
 
-      const data = await response.json();
-
       if (response.ok) {
-        setCookie("token", data.access_token, 1); // Set the cookie to expire in 1 day
-        // Handle other cookie data (if needed) here...
         navigate('/Table'); // Navigate to the table page on successful login
       } else {
-        invalid.style.display = "block";
-        invalid.textContent = data.message || "An error occurred";
+        const data = await response.json();
+        setError(data.message || "An error occurred during login.");
+        setShowError(true);
       }
     } catch (error) {
-      invalid.style.display = "block";
-      invalid.textContent = "Failed to login";
+      setError("Failed to connect to the server.");
+      setShowError(true);
     }
   }
-  const debugBorderStyle = {
-    border: '1px solid red', // Red border will make the divisions clear
-    // margin: '5px', // Add some space around elements to see them clearly
-  };
-
-   const inputGroupStyle = {
-    marginBottom: '0', // Removes Bootstrap's default margin-bottom from the .row
-    paddingTop: '0', // Removes any padding-top that might be on the input row
-    paddingBottom: '0', // Removes any padding-bottom that might be on the input row
-    // Add other style adjustments as necessary
-  };
-
+  
+  const debugBorderStyle = { border: '1px solid red' };
+  const inputGroupStyle = { marginBottom: '0', paddingTop: '0', paddingBottom: '0' };
 
 return (
   <div className="login-container" >
@@ -74,7 +52,7 @@ return (
       
       {showError && (
            <div className="alertBox" style={{ textAlign: 'center', alignContent: 'center' }}>
-             Both email and password are required, please try again.
+             {error}
            </div>
        )}
       
