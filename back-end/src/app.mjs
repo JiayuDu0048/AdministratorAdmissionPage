@@ -11,6 +11,7 @@ import updateRouter from './routes/updateRouter.mjs';
 import deleteRowsRouter from './routes/deleteRowsRouter.mjs';
 import getStudentRouter from './routes/getStudentRouter.mjs';
 import loginRouter from './routes/loginRouter.mjs';
+import fetchAllStudentsRouter from './routes/fetchAllStudentsRouter.mjs'
 
 const app = express();
 
@@ -44,6 +45,7 @@ mongoose.connect(process.env.MONGODB_URI, { useNewUrlParser: true, useUnifiedTop
 // Routers
 app.use('/api', updateRouter);
 app.use('/api', getStudentRouter);
+app.use('/api/students', fetchAllStudentsRouter);
 app.post('/populate/data', populateDataRouter);
 app.delete('/delete/rows', deleteRowsRouter);
 app.use('/auth', loginRouter); //for every HTTP request that matches the path /auth/*, it should use the loginRouter middleware to handle that request. 
