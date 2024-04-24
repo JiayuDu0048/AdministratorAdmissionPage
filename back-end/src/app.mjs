@@ -1,19 +1,17 @@
 import express from 'express';
 import url from 'url';
 import path from 'path';
-import multer from "multer";
 import cors from 'cors';
 import dotenv from 'dotenv';
-import "dotenv/config"
+import "dotenv/config";
 import morgan from 'morgan';
-import session from 'express-session';
 import mongoose from 'mongoose';  
-import passport from 'passport'
 import populateDataRouter from './routes/populateDataRouter.mjs';
-import updateRouter from './routes/updateRouter.mjs'
+import updateRouter from './routes/updateRouter.mjs';
 import deleteRowsRouter from './routes/deleteRowsRouter.mjs';
-import getStudentRouter from './routes/getStudentRouter.mjs'
-// import CustomJwtStrategy from './config/jwt-config.mjs';
+import getStudentRouter from './routes/getStudentRouter.mjs';
+import loginRouter from './routes/loginRouter.mjs';
+import fetchAllStudentsRouter from './routes/fetchAllStudentsRouter.mjs'
 
 const app = express();
 
@@ -47,24 +45,13 @@ mongoose.connect(process.env.MONGODB_URI, { useNewUrlParser: true, useUnifiedTop
 // Routers
 app.use('/api', updateRouter);
 app.use('/api', getStudentRouter);
+app.use('/api/students', fetchAllStudentsRouter);
 app.post('/populate/data', populateDataRouter);
 app.delete('/delete/rows', deleteRowsRouter);
+app.use('/auth', loginRouter); //for every HTTP request that matches the path /auth/*, it should use the loginRouter middleware to handle that request. 
 
 
 
-// session to auto-save user data (like id) when they login
-// app.use(session({
-//   secret: process.env.SESSION_SECRET,
-//   resave: false,
-//   saveUninitialized:true,
-//   cookie: {httpOnly: true, secure: process.env.NODE_ENV==="production"}
-// }))
-// console.log('Session secret:', process.env.SESSION_SECRET);
-
-// // jwt strategy
-// passport.use(CustomJwtStrategy)
-// // initialize passport
-// app.use(passport.initialize())
 
 
 export default app;

@@ -1,4 +1,15 @@
+import { useNavigate } from 'react-router-dom';
+
 function NavbarLogout() {
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    // clearing auth tokens
+    localStorage.removeItem('token');
+    // Redirect to the root route
+    navigate('/');
+  };
+
   return (
     <>
       <nav className="navbar custom-navbar ">
@@ -13,7 +24,7 @@ function NavbarLogout() {
             </a>
           </div>
           <div className="justify-content-end">
-            <button className="btn btn-secondary" type="button">
+            <button className="btn btn-secondary" type="button" onClick={handleLogout}>
               Log Out
             </button>
           </div>

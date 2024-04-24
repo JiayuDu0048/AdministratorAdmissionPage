@@ -9,8 +9,9 @@
 }
 
 .navbar-logo {
-  width: 300px; 
+  width: 330px; 
   height: auto; 
+  padding: 20px;
   margin-left: 20px;
 }
 /*LoginPage*/
@@ -24,30 +25,34 @@
 }
 .login-box{
     display: flex;
-    height: 60%;
+    height: 70%;
     width: 60%;
     background-color: #ffffff; 
     border: 5px solid #bedbf6;
     border-radius: 10px;
     box-shadow: 10px 10px #9dc9f3;
     position: relative;
+    
 }
 .loginHead{
   font-weight: 700;
-  font-size: 2.5vw;
+  font-size: 2.8vw;
   color:#142b43;
-  position: absolute;
-  top: 15%;
+  position: relative;
+  top: 12%;
   left: 15%;
 }
 .alertBox{
   background-color: #e9e9e9;
+  font-size: 2vh;
   width: 75%;
-  height: 7vh;
+  height: auto;
   border-left: 3px solid #2582e3;
   position: absolute;
-  top: 32%;
+  /* margin-bottom: 1rem; Space below the error message */
+  top: 30%;
   left: 15%;
+  padding: 5px;
 }
 .alert{
   font-weight: 300;
@@ -56,7 +61,8 @@
 }
 .input-pos{
   position: absolute;
-  top: 53%;
+  width: 60%;
+  top: 46%;
   left: 15%;
 }
 

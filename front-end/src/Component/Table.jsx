@@ -122,8 +122,36 @@ function Table() {
     }
   };
 
+  
   //Load the table using datatable and reload when the rows changed
   const tableRef = useRef(null);
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await axiosProvider.get('/api/students', {
+          withCredentials: true
+        });
+        const filteredData = response.data
+          .filter(row => !row.deleted) // Exclude deleted records
+          .map(({ deleted, deletedAt, __v, _id, ...keepAttrs }) => ({
+            ...keepAttrs, 
+            AdmissionStatus: keepAttrs.AdmissionStatus ? 'Finished' : 'Unfinished',
+            MatriculationStatus: keepAttrs.MatriculationStatus ? 'Finished' : 'Unfinished',
+            UnityStatus: keepAttrs.UnityStatus ? 'Finished' : 'Unfinished',
+            CourseraStatus: keepAttrs.CourseraStatus ? 'Finished' : 'Unfinished',
+            SurveyStatus: keepAttrs.SurveyStatus ? 'Finished' : 'Unfinished',
+          }));
+        
+        setRows(filteredData);
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      }
+    };
+  
+    fetchData();
+  }, []);
+  
+
   useEffect(() => {
     const $dataTable = $(tableRef.current);
 
@@ -133,8 +161,8 @@ function Table() {
         responsive: true,
         autoWidth: false,
         stateSave: true, // Enable state saving to remember the table's state
-        // Add other DataTables options here
       });
+      
     } else {
       // DataTables is already initialized, so we manually manage updates
       // to avoid destroying and reinitializing it.
