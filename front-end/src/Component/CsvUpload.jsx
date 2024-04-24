@@ -77,7 +77,7 @@ function CsvUpload({onCsvData}) {
                 Email: row["Email"],
                 Session: sessionNumber,
                 SessionModality: sessionModality,
-                // the admin will update these fields weekly, default value = "Unfinished"
+                // the admin will update these fields weekly, default value = false -> "Unfinished"
                 AdmissionStatus: false,
                 MatriculationStatus: false,
                 UnityStatus: false,
@@ -93,7 +93,6 @@ function CsvUpload({onCsvData}) {
         Papa.parse(file, {
             complete: (result) => {
                 const preprocessedData = preprocessData(result.data);
-                onCsvData(preprocessedData); // callback function: send data from child to parent
 
                 // After parsing, send the data to the backend
                 sendDataToBackend(preprocessedData);
@@ -114,6 +113,7 @@ function CsvUpload({onCsvData}) {
                 }});
             setTitle("Upload Success!");
             setMessage("All entries have been uploaded.");
+            onCsvData(response.data);  // callback function: send data from child to parent
         } catch (error) {
             setTitle("Upload Failed");
             setMessage("Please try again later.");
