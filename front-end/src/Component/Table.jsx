@@ -122,9 +122,9 @@ function Table() {
     }
   };
 
+  
   //Load the table using datatable and reload when the rows changed
   const tableRef = useRef(null);
- 
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -141,7 +141,7 @@ function Table() {
             CourseraStatus: keepAttrs.CourseraStatus ? 'Finished' : 'Unfinished',
             SurveyStatus: keepAttrs.SurveyStatus ? 'Finished' : 'Unfinished',
           }));
-          console.log(filteredData)
+        
         setRows(filteredData);
       } catch (error) {
         console.error('Error fetching data:', error);
@@ -154,7 +154,6 @@ function Table() {
 
   useEffect(() => {
     const $dataTable = $(tableRef.current);
-    console.log(rows);
 
     if (!$.fn.dataTable.isDataTable($dataTable)) {
       // Initialize DataTables only if it hasn't been initialized
@@ -162,19 +161,6 @@ function Table() {
         responsive: true,
         autoWidth: false,
         stateSave: true, // Enable state saving to remember the table's state
-        data: rows,
-        columns: [ // Define columns to match the data keys
-        { title: "N Number", data: 'NNumber' },
-        { title: "Name", data: 'Name' },
-        { title: "Email", data: 'Email' },
-        { title: "Session", data: 'Session' },
-        { title: "Session Modality", data: 'SessionModality' },
-        { title: "Admission Status", data: 'AdmissionStatus' },
-        { title: "Matriculation Status", data: 'MatriculationStatus' },
-        { title: "Unity Status", data: 'UnityStatus' },
-        { title: "Coursera Status", data: 'CourseraStatus' },
-        { title: "Survey Status", data: 'SurveyStatus' },
-      ]
       });
       
     } else {
