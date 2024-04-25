@@ -5,7 +5,7 @@ const router = express.Router();
 
 // Endpoint to fetch a student record by NNumber
 router.get('/getStudentRecord', async(req, res) => {
-  const { NNumber } = req.body;
+  const NNumber = req.query.NNumber;
 
   try{
     const studentRecord = await Student.findOne({NNumber});
