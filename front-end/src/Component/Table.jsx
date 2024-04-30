@@ -6,7 +6,9 @@ import "datatables.net-bs5";
 import 'bootstrap/dist/js/bootstrap.bundle'; //Change the above line to relative path-> more compatible
 import "@popperjs/core";
 import CsvUpload from "./CSVupload";
+import { convertArrayOfObjectsToCSV, downloadCSV } from './CsvDownload';
 import axiosProvider from "../utils/axiosConfig";
+
 
 function Table() {
   const startingIndex = 5;
@@ -121,6 +123,11 @@ function Table() {
         console.error("Received CSV data is not an array:", newData);
     }
   };
+
+  function handleDownloadClick(rows) {
+    const csvString = convertArrayOfObjectsToCSV(rows);
+    downloadCSV(csvString, 'student_database.csv');
+  }
 
   
   //Load the table using datatable and reload when the rows changed
@@ -262,7 +269,8 @@ function Table() {
         <h2 style={{marginLeft: '30px'}}>Drop .csv files here to upload student data </h2>
         <ul style={{listStyleType: 'disc', margin: '23px'}}>
                   <li> Drop only one csv file each time. This file must contain these columns: 'Campus ID', 'Preferred', 'Last', 'Email', 'Session'.</li>
-                  <li>You can drop files that contain previous student records. The system will only add new students into the database. </li>
+                  <li> The value format for 'Session' must be: Coding for Game Design Session 1/2/3: xxxxx</li>
+                  <li> You can drop files that contain previous student records. The system will only add new students into the database. </li>
         </ul>
         {/* Upload function */}
         <CsvUpload onCsvData={handleCsvData}> </CsvUpload>
@@ -270,49 +278,68 @@ function Table() {
         
 
         <div className="headerContainer">
-        <h2 style={{marginLeft: '23px', marginTop: '23px'}}> Student Database </h2>
-        {/* Edit Mode & Save button*/}
-        <div className="editPositionController" >
-          {isEditing ? (
-            <button
-              className="btn btn-secondary"
-              data-bs-toggle="modal"
-              data-bs-target="#SaveConfirm"
-              data-bs-backdrop="true"
-              style={{
-                marginRight: 10,
-                width: 85,
-                height: 40,
-                display: "flex",
-                paddingLeft: 20,
-                alignItems: "center",
-                fontSize: '20px',
-                borderRadius: '20px'
-              }}
-              type="button"
-            >
-              Save
+          <h2 style={{marginLeft: '23px', marginTop: '23px'}}> Student Database </h2>
+          {/* Edit Mode & Save button*/}
+          <div className="editPositionController" >
+            {isEditing ? (
+              <button
+                className="btn btn-secondary"
+                data-bs-toggle="modal"
+                data-bs-target="#SaveConfirm"
+                data-bs-backdrop="true"
+                style={{
+                  marginRight: 10,
+                  width: 85,
+                  height: 40,
+                  display: "flex",
+                  paddingLeft: 20,
+                  alignItems: "center",
+                  fontSize: '20px',
+                  borderRadius: '20px'
+                }}
+                type="button"
+              >
+                Save
+              </button>
+            ) : (
+              <button
+                className="btn btn-primary"
+                style={{
+                  marginRight: 10,
+                  width: 75,
+                  height: 40,
+                  display: "flex",
+                  paddingLeft: 20,
+                  alignItems: "center",
+                  fontSize: '20px',
+                  borderRadius: '20px'
+                }}
+                onClick={handleEditClick}
+                type="button"
+              >
+                Edit
+              </button>
+            )}
+          </div>
+          <button
+                className="btn btn-secondary"
+                style={{
+                  marginRight: 10,
+                  width: 130,
+                  height: 40,
+                  display: "flex",
+                  paddingLeft: 20,
+                  alignItems: "center",
+                  fontSize: '20px',
+                  borderRadius: '20px',
+                  marginLeft: '23px',
+                  marginTop: '23px'
+                }}
+                type="button"
+                onClick={() => handleDownloadClick(rows)}
+              >
+                Download
             </button>
-          ) : (
-            <button
-              className="btn btn-primary"
-              style={{
-                marginRight: 10,
-                width: 75,
-                height: 40,
-                display: "flex",
-                paddingLeft: 20,
-                alignItems: "center",
-                fontSize: '20px',
-                borderRadius: '20px'
-              }}
-              onClick={handleEditClick}
-              type="button"
-            >
-              Edit
-            </button>
-          )}
-        </div>
         </div>
 
         <div
