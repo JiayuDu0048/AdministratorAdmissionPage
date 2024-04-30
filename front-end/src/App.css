@@ -3,6 +3,11 @@
 @tailwind components;
 @tailwind utilities;
 
+
+body {
+  overflow-x: hidden; /*Hide anything go out out the current screen size*/
+}
+
 /*Navbar customize*/
 .custom-navbar {
   background-color: #57068C; 
@@ -68,7 +73,12 @@
 
 /*Table margin customize*/
 .marginGlobal{
-  padding:15px
+  padding:10px
+}
+
+li{
+  padding: 5px;
+  font-size: 20px;
 }
 
 /*Upload button and text customize*/
@@ -81,6 +91,8 @@
   justify-content: center;
   align-items: center; 
   height: 170px;
+  width: 98%;
+  margin: auto;
 }
 .textUpload{
   margin-left: 20px;
@@ -88,10 +100,13 @@
 }
 
 /*Edit and Save customize*/
+.headerContainer {
+  display: flex;
+}
 .editPositionController{
   position:relative;
-  bottom: -55px;
-  right: -90px;
+  margin-left: 23px;
+  margin-top: 23px;
 }
 
 

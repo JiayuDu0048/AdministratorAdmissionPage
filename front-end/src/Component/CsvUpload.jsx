@@ -136,6 +136,7 @@ function CsvUpload({onCsvData}) {
 
     return (
         <div className="marginGlobal">
+              
             <div
                 className={`styleUpload ${dragging ? "dragging" : ""}`}
                 onDragEnter={handleDragEnter}
@@ -177,7 +178,6 @@ function CsvUpload({onCsvData}) {
               message={message}
               title={title}
             />}
-
         </div>
     );
 }

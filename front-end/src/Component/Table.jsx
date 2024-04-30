@@ -259,17 +259,21 @@ function Table() {
   return (
     <>
       <div className="marginGlobal">
-        <h2 style={{marginLeft: '30px'}}>Drop .csv files here to upload student data: </h2>
-        <ul style={{listStyleType: 'disc', margin: '20px', fontSize: '18px'}}>
-                <li> Drop only one csv file at one time. </li>
-                <li>Please make sure that this file contains the following columns: N Number, Students' Names, Email, and Session.</li>
-                <li>You can drop files that contain previous student records. The system will only add new students into the database. </li>
+        <h2 style={{marginLeft: '23px'}}>Drop .csv files here to upload student data </h2>
+        <ul style={{listStyleType: 'disc', margin: '23px'}}>
+                  <li> Drop only one csv file at one time. </li>
+                  <li>Please make sure that this file contains the following columns: N Number, Students' Names, Email, and Session.</li>
+                  <li>You can drop files that contain previous student records. The system will only add new students into the database. </li>
         </ul>
         {/* Upload function */}
         <CsvUpload onCsvData={handleCsvData}> </CsvUpload>
 
+        
+
+        <div className="headerContainer">
+        <h2 style={{marginLeft: '23px', marginTop: '23px'}}> Student Database </h2>
         {/* Edit Mode & Save button*/}
-        <div className="editPositionController" style={{ marginBottom: '70px', marginLeft: '-70px', marginTop: '-50px'}}>
+        <div className="editPositionController" >
           {isEditing ? (
             <button
               className="btn btn-secondary"
@@ -278,11 +282,13 @@ function Table() {
               data-bs-backdrop="true"
               style={{
                 marginRight: 10,
-                width: 100,
-                height: 30,
+                width: 85,
+                height: 40,
                 display: "flex",
-                paddingLeft: 32,
+                paddingLeft: 20,
                 alignItems: "center",
+                fontSize: '20px',
+                borderRadius: '20px'
               }}
               type="button"
             >
@@ -293,11 +299,13 @@ function Table() {
               className="btn btn-primary"
               style={{
                 marginRight: 10,
-                width: 100,
-                height: 30,
+                width: 75,
+                height: 40,
                 display: "flex",
-                paddingLeft: 32,
+                paddingLeft: 20,
                 alignItems: "center",
+                fontSize: '20px',
+                borderRadius: '20px'
               }}
               onClick={handleEditClick}
               type="button"
@@ -306,6 +314,8 @@ function Table() {
             </button>
           )}
         </div>
+        </div>
+
         <div
           className="modal fade"
           id="SaveConfirm"
@@ -406,6 +416,7 @@ function Table() {
           </div>
         </div>
 
+        
         {/* Table */}
        <div key={rows.length} className="table-responsive" style={{margin: '21px'}}> 
          {/* React feature: force re-render the table everytime the key is changed */}
@@ -572,6 +583,7 @@ function Table() {
             ))}
           </tbody>
         </table>
+        
         </div> 
       </div>
     </>
