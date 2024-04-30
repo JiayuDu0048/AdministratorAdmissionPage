@@ -8,6 +8,8 @@ import Table from "./Component/Table";
 import LoginPage from "./Component/LoginPage";
 import Dashboard from "./Component/charts/DashboardScreen";
 import BaseLayout from "./layouts/BaseLayout";
+import GothamMedium from '../assets/Gotham-Medium.otf'
+
 
 function App() {
   return (

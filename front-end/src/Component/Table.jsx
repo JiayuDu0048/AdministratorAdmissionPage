@@ -259,10 +259,9 @@ function Table() {
   return (
     <>
       <div className="marginGlobal">
-        <h2 style={{marginLeft: '23px'}}>Drop .csv files here to upload student data </h2>
+        <h2 style={{marginLeft: '30px'}}>Drop .csv files here to upload student data </h2>
         <ul style={{listStyleType: 'disc', margin: '23px'}}>
-                  <li> Drop only one csv file at one time. </li>
-                  <li>Please make sure that this file contains the following columns: N Number, Students' Names, Email, and Session.</li>
+                  <li> Drop only one csv file each time. This file must contain these columns: 'Campus ID', 'Preferred', 'Last', 'Email', 'Session'.</li>
                   <li>You can drop files that contain previous student records. The system will only add new students into the database. </li>
         </ul>
         {/* Upload function */}

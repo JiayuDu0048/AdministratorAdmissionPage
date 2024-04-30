@@ -3,6 +3,29 @@
 @tailwind components;
 @tailwind utilities;
 
+@font-face {
+  font-family: 'GothamMedium';
+  src: url('../assets/Gotham-Medium.otf') format('opentype');
+}
+
+@font-face {
+  font-family: 'GothamBold';
+  src: url('../assets/GothamSSm-Bold.otf') format('opentype');
+}
+
+@font-face {
+  font-family: 'GothamNarrow';
+  src: url('../assets/GothamSSm-Light.otf') format('opentype');
+
+}
+
+/* * {
+  font-family: 'GothamMedium', sans-serif;
+} */
+
+h2{
+  font-family: 'GothamBold', sans-serif;
+}
 
 body {
   overflow-x: hidden; /*Hide anything go out out the current screen size*/
@@ -78,7 +101,7 @@ body {
 
 li{
   padding: 5px;
-  font-size: 20px;
+  font-size: 17px;
 }
 
 /*Upload button and text customize*/
