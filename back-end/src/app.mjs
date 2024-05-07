@@ -12,6 +12,7 @@ import deleteRowsRouter from './routes/deleteRowsRouter.mjs';
 import getStudentRouter from './routes/getStudentRouter.mjs';
 import loginRouter from './routes/loginRouter.mjs';
 import fetchAllStudentsRouter from './routes/fetchAllStudentsRouter.mjs'
+import sessionStatsRouter from './routes/statsRouter.mjs';
 
 const app = express();
 
@@ -45,6 +46,7 @@ mongoose.connect(process.env.MONGODB_URI, { useNewUrlParser: true, useUnifiedTop
 // Routers
 app.use('/api', updateRouter);
 app.use('/api', getStudentRouter);
+app.use('/api', sessionStatsRouter);
 app.use('/api/students', fetchAllStudentsRouter);
 app.post('/populate/data', populateDataRouter);
 app.delete('/delete/rows', deleteRowsRouter);

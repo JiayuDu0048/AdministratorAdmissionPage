@@ -23,12 +23,16 @@
   font-family: 'GothamMedium', sans-serif;
 } */
 
-h2{
-  font-family: 'GothamBold', sans-serif;
-}
+
 
 body {
   overflow-x: hidden; /*Hide anything go out out the current screen size*/
+}
+
+h2{
+  font-family: 'GothamBold', sans-serif;
+  margin-top: 50px;
+  margin-left: 50px;
 }
 
 /*Navbar customize*/
@@ -100,8 +104,15 @@ body {
 }
 
 li{
-  padding: 5px;
-  font-size: 17px;
+  padding: 10px;
+  font-size: 20px;
+  /* font-family: 'GothamNarrow'; */
+}
+
+.flexDropArea{
+  /* display: flex; */
+  margin-top: 20px;
+  margin-bottom: 50px;
 }
 
 /*Upload button and text customize*/
@@ -129,7 +140,7 @@ li{
 .editPositionController{
   position:relative;
   margin-left: 23px;
-  margin-top: 23px;
+  margin-top: 50px;
 }
 
 

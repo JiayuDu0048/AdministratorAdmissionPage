@@ -12,7 +12,8 @@ const studentSchema = new mongoose.Schema({
   CourseraStatus: { type: Boolean, default: false },
   SurveyStatus: { type: Boolean, default: false },
   deleted: { type: Boolean, default: false },
-  deletedAt: { type: Date }
+  deletedAt: { type: Date },
+  addedAt: { type: Date, default: Date.now }
 });
 
 // Create a table called 'Student', with our defined schemas

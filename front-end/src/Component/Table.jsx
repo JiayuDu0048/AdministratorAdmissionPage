@@ -140,7 +140,7 @@ function Table() {
         });
         const filteredData = response.data
           .filter(row => !row.deleted) // Exclude deleted records
-          .map(({ deleted, deletedAt, __v, _id, ...keepAttrs }) => ({
+          .map(({ deleted, deletedAt, addedAt,  __v, _id, ...keepAttrs }) => ({
             ...keepAttrs, 
             AdmissionStatus: keepAttrs.AdmissionStatus ? 'Finished' : 'Unfinished',
             MatriculationStatus: keepAttrs.MatriculationStatus ? 'Finished' : 'Unfinished',
@@ -266,19 +266,22 @@ function Table() {
   return (
     <>
       <div className="marginGlobal">
-        <h2 style={{marginLeft: '30px'}}>Drop .csv files here to upload student data </h2>
-        <ul style={{listStyleType: 'disc', margin: '23px'}}>
-                  <li> Drop only one csv file each time. This file must contain these columns: 'Campus ID', 'Preferred', 'Last', 'Email', 'Session'.</li>
-                  <li> The value format for 'Session' must be: Coding for Game Design Session 1/2/3: xxxxx</li>
-                  <li> You can drop files that contain previous student records. The system will only add new students into the database. </li>
-        </ul>
+      <div className="flexDropArea">
+        <div className="groupText">
+            <h2>Drop .csv files here to upload student data </h2>
+            <ul style={{listStyleType: 'disc', marginLeft: '70px', marginTop: '20px', marginBottom: '20px'}}>
+                      <li> Drop only one csv file each time. This file must contain these columns: 'Campus ID', 'Preferred', 'Last', 'Email', 'Session'.</li>
+                      <li> The value format for 'Session' must be: Coding for Game Design Session 1/2/3: xxxxx</li>
+                      <li> You can drop files that contain previous student records. The system will only add new students into the database. </li>
+            </ul>
+          </div>
         {/* Upload function */}
         <CsvUpload onCsvData={handleCsvData}> </CsvUpload>
-
+        </div>
         
 
         <div className="headerContainer">
-          <h2 style={{marginLeft: '23px', marginTop: '23px'}}> Student Database </h2>
+          <h2 style={{marginTop: '50px', marginLeft: '30px'}}> Student Database </h2>
           {/* Edit Mode & Save button*/}
           <div className="editPositionController" >
             {isEditing ? (
@@ -333,7 +336,7 @@ function Table() {
                   fontSize: '20px',
                   borderRadius: '20px',
                   marginLeft: '23px',
-                  marginTop: '23px'
+                  marginTop: '50px'
                 }}
                 type="button"
                 onClick={() => handleDownloadClick(rows)}
