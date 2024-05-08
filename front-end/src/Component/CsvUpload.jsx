@@ -96,8 +96,8 @@ function CsvUpload({onCsvData}) {
 
                 // After parsing, send the data to the backend
                 sendDataToBackend(preprocessedData);
-                socket.emit('request session update'); 
                 setCsvFile(null);
+                socket.emit('request session update'); 
             },
             header: true,
         });
