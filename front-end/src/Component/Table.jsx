@@ -87,7 +87,7 @@ function Table() {
       
       const results = await Promise.all(responses); // Don't necessarily need this, since we have previous await before adding to responses
       const allSuccess = results.every(result => result.status >= 200 && result.status < 300);
-      console.log(results);
+  
       
       // If all successful, update the main rows state with the pending changes
       if(allSuccess){
@@ -189,6 +189,7 @@ function Table() {
         responsive: true,
         autoWidth: false,
         stateSave: true, // Enable state saving to remember the table's state
+        
       });
       
     } else {
