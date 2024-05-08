@@ -14,6 +14,7 @@ function Table() {
   const startingIndex = 5;
   // const StatusNames = Object.keys(rows[0]).slice(startingIndex);
   const [rows, setRows] = useState([]);
+  const [loading, setLoading] = useState(true);
   const StatusNames = rows[0] ? Object.keys(rows[0]).slice(startingIndex) : [];
   const [pendingChanges, setPendingChanges] = useState({ emailUpdates: {}, statusUpdates: {} });
   const [sessionChanged, setSessionChanged] = useState(false);
@@ -134,10 +135,12 @@ function Table() {
 
             // Iterate over new data and add to the map if not already present
             newData.forEach(row => {
-                if (!existingMap.has(row.NNumber)) {
-                    existingMap.set(row.NNumber, row);
-                }
-            }); 
+              if (!existingMap.has(row.NNumber)) {
+                  const { deleted, deletedAt, addedAt, __v, _id, ...keepAttrs } = row;
+                  existingMap.set(row.NNumber, keepAttrs); // Only keep desired attributes
+              }
+          });
+
             return Array.from(existingMap.values());
         });
     } else {
@@ -155,6 +158,7 @@ function Table() {
   const tableRef = useRef(null);
   useEffect(() => {
     const fetchData = async () => {
+    
       try {
         const response = await axiosProvider.get('/api/students', {
           withCredentials: true
@@ -170,10 +174,17 @@ function Table() {
             SurveyStatus: keepAttrs.SurveyStatus ? 'Finished' : 'Unfinished',
           }));
         
+          console.log("Filtered data:", filteredData);
+          setRows(filteredData);
+          if (filteredData.length > 0) {
+            console.log("Example row data:", filteredData[0]);
+          }
         setRows(filteredData);
       } catch (error) {
         console.error('Error fetching data:', error);
       }
+      setLoading(false);
+    
     };
   
     fetchData();
@@ -181,10 +192,13 @@ function Table() {
   
 
   useEffect(() => {
+    
     const $dataTable = $(tableRef.current);
+    console.log("Rows data before DataTable operation:", rows);
 
     if (!$.fn.dataTable.isDataTable($dataTable)) {
       // Initialize DataTables only if it hasn't been initialized
+      console.log("Initializing DataTable with data:", rows);
       $dataTable.DataTable({
         responsive: true,
         autoWidth: false,
@@ -195,6 +209,7 @@ function Table() {
     } else {
       // DataTables is already initialized, so we manually manage updates
       // to avoid destroying and reinitializing it.
+      console.log("Updating DataTable with new data:", rows);
       let dataTableInstance = $dataTable.DataTable();
 
       // Temporarily disable state saving to avoid saving state during data update
@@ -210,6 +225,7 @@ function Table() {
     // Cleanup function to destroy the DataTable instance on component unmount (Don't delete this!)
     return () => {
       if ($.fn.dataTable.isDataTable($dataTable)) {
+        console.log("Destroying DataTable");
         $dataTable.DataTable().destroy();
       }
     };

@@ -111,6 +111,7 @@ function CsvUpload({onCsvData}) {
                 headers: {
                   'Content-Type': 'application/json'
                 }});
+            
             setTitle("Upload Success!");
             setMessage("All entries have been uploaded.");
             onCsvData(response.data);  // callback function: send data from child to parent
