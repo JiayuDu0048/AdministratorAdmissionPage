@@ -30,12 +30,7 @@ const AreaCards = () => {
       console.log('Received updated session data:', updatedSessions);
       setSessions(updatedSessions);  // Update sessions state with new data
     });
-
-    socket.on('connect_error', (err) => {
-      console.log('Connection Error:', err);
-    });
     
-
     // Clean up the effect by removing the event listener
     return () => socket.off('update sessions');
 

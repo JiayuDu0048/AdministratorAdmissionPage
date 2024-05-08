@@ -17,6 +17,7 @@ function Table() {
   const StatusNames = rows[0] ? Object.keys(rows[0]).slice(startingIndex) : [];
   const [pendingChanges, setPendingChanges] = useState({ emailUpdates: {}, statusUpdates: {} });
   const [sessionChanged, setSessionChanged] = useState(false);
+  const [statusChanged, setStatusChanged] = useState(false);
 
   //Save pending changes function
   //Only save email changes
@@ -45,6 +46,9 @@ function Table() {
 
     if (StatusName === "Session") {
       setSessionChanged(true);
+    }
+    if (StatusName.endsWith('Status')){
+      setStatusChanged(true);
     }
   };
 
@@ -101,6 +105,9 @@ function Table() {
           // Emit an event from the frontend to request updated session stats
           // This requires the backend to have an endpoint listening for this event
           socket.emit('request session update');
+        }
+        if (statusChanged){
+          socket.emit('request status update');
         }
 
       }else{
