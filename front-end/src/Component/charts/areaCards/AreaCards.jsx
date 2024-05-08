@@ -2,6 +2,13 @@ import React, { useEffect, useState } from 'react';
 import AreaCard from "./AreaCard";
 import "./AreaCards.scss";
 import axiosProvider from '../../../utils/axiosConfig';
+import io from 'socket.io-client';
+
+const serverURL = import.meta.env.VITE_SERVER_URL;
+// Establish a connection to the WebSocket server
+const socket = io(serverURL, {
+  path: '/socket.io' 
+});  
 
 const AreaCards = () => {
   const [sessions, setSessions] = useState([]);
@@ -17,6 +24,21 @@ const AreaCards = () => {
     };
 
     fetchSessions();
+
+    // Set up WebSocket listener for updates
+    socket.on('update sessions', (updatedSessions) => {
+      console.log('Received updated session data:', updatedSessions);
+      setSessions(updatedSessions);  // Update sessions state with new data
+    });
+
+    socket.on('connect_error', (err) => {
+      console.log('Connection Error:', err);
+    });
+    
+
+    // Clean up the effect by removing the event listener
+    return () => socket.off('update sessions');
+
   }, []);
 
   return (

@@ -16,6 +16,7 @@ router.get('/session-stats', async (req, res) => {
       },
       { $sort: { _id: 1 } } // Sort "1""2""3" in ascending order (_id:1)
     ]);
+
     res.json(sessionStats);
   } catch (error) {
     console.error('Error fetching session statistics:', error);
@@ -64,7 +65,7 @@ router.get('/status-completion', async (req, res) => {
     }
   });
   
-
+  // Endpoint to fetch monthly increase & loss
   router.get('/monthly-stats', async (req, res) => {
     try {
         const newAdditions = await Student.aggregate([

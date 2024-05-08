@@ -16,8 +16,10 @@ function Table() {
   const [rows, setRows] = useState([]);
   const StatusNames = rows[0] ? Object.keys(rows[0]).slice(startingIndex) : [];
   const [pendingChanges, setPendingChanges] = useState({ emailUpdates: {}, statusUpdates: {} });
+  const [sessionChanged, setSessionChanged] = useState(false);
 
   //Save pending changes function
+  //Only save email changes
   const accumulateEmailChange = (NNumber, newEmail) => {
     setRows(currentRows =>
       currentRows.map(row =>
@@ -29,6 +31,7 @@ function Table() {
     }));
   };
 
+  //Save pending changes: session, all status
   const accumulateStatusChange = (NNumber, StatusName, newStatus) => {
     setRows(currentRows =>
       currentRows.map(row =>
@@ -39,6 +42,10 @@ function Table() {
       ...prev,
       statusUpdates: { ...prev.statusUpdates, [NNumber]: { ...prev.statusUpdates[NNumber], [StatusName]: newStatus } }
     }));
+
+    if (StatusName === "Session") {
+      setSessionChanged(true);
+    }
   };
 
   //Edit Mode function
@@ -89,6 +96,13 @@ function Table() {
             ...statusUpdate
           };
         }));
+        
+        if (sessionChanged) {
+          // Emit an event from the frontend to request updated session stats
+          // This requires the backend to have an endpoint listening for this event
+          socket.emit('request session update');
+        }
+
       }else{
         //TODO: set error message window
       }
@@ -263,13 +277,13 @@ function Table() {
   };
  
 
-  return (
+  return ( 
     <>
       <div className="marginGlobal">
       <div className="flexDropArea">
         <div className="groupText">
             <h2>Drop .csv files here to upload student data </h2>
-            <ul style={{listStyleType: 'disc', marginLeft: '70px', marginTop: '20px', marginBottom: '20px'}}>
+            <ul style={{listStyleType: 'disc', marginLeft: '40px', marginTop: '20px', marginBottom: '20px'}}>
                       <li> Drop only one csv file each time. This file must contain these columns: 'Campus ID', 'Preferred', 'Last', 'Email', 'Session'.</li>
                       <li> The value format for 'Session' must be: Coding for Game Design Session 1/2/3: xxxxx</li>
                       <li> You can drop files that contain previous student records. The system will only add new students into the database. </li>

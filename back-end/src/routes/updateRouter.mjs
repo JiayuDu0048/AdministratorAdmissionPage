@@ -1,6 +1,7 @@
 import express from 'express';
 import Student from '../schemas/studentSchema.mjs'; // Import Mongoose model
 
+
 const router = express.Router();
 
 const getStatus = (sessionStr) => {
@@ -37,7 +38,7 @@ router.post('/updateEmail', async (req, res) => {
   }
 });
 
-// Update all status endpoint
+// Update all status + session endpoint
 router.post('/updateStatus', async (req, res) => {
   const { NNumber, StatusName} = req.body;
 
@@ -56,6 +57,19 @@ router.post('/updateStatus', async (req, res) => {
         const modality = getStatus(newStatus);
         const update = {"SessionModality": modality };
         const result = await Student.findOneAndUpdate({ NNumber }, update, { new: true });
+
+        // Update the stats in AreaCards by socket
+        const sessionStats = await Student.aggregate([
+          { $match: { Session: { $ne: null }, deleted: false } },
+          {
+            $group: {
+              _id: "$Session",
+              count: { $sum: 1 }
+            }
+          },
+          { $sort: { _id: 1 } } // Sort "1""2""3" in ascending order (_id:1)
+        ]);
+        req.io.emit('update sessions', sessionStats);
     }
     res.json(result);
   } catch (error) {
