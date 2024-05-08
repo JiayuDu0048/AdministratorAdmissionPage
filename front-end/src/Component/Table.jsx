@@ -12,9 +12,7 @@ import axiosProvider from "../utils/axiosConfig";
 
 function Table() {
   const startingIndex = 5;
-  // const StatusNames = Object.keys(rows[0]).slice(startingIndex);
   const [rows, setRows] = useState([]);
-  const [loading, setLoading] = useState(true);
   const StatusNames = rows[0] ? Object.keys(rows[0]).slice(startingIndex) : [];
   const [pendingChanges, setPendingChanges] = useState({ emailUpdates: {}, statusUpdates: {} });
   const [sessionChanged, setSessionChanged] = useState(false);
@@ -141,6 +139,7 @@ function Table() {
               }
           });
 
+            
             return Array.from(existingMap.values());
         });
     } else {
@@ -174,7 +173,7 @@ function Table() {
             SurveyStatus: keepAttrs.SurveyStatus ? 'Finished' : 'Unfinished',
           }));
         
-          console.log("Filtered data:", filteredData);
+          // console.log("Filtered data:", filteredData);
           setRows(filteredData);
           if (filteredData.length > 0) {
             console.log("Example row data:", filteredData[0]);
@@ -183,7 +182,7 @@ function Table() {
       } catch (error) {
         console.error('Error fetching data:', error);
       }
-      setLoading(false);
+      
     
     };
   
@@ -194,11 +193,12 @@ function Table() {
   useEffect(() => {
     
     const $dataTable = $(tableRef.current);
-    console.log("Rows data before DataTable operation:", rows);
+    // console.log("Rows data before DataTable operation:", rows);
 
     if (!$.fn.dataTable.isDataTable($dataTable)) {
       // Initialize DataTables only if it hasn't been initialized
-      console.log("Initializing DataTable with data:", rows);
+
+      // console.log("Initializing DataTable with data:", rows);
       $dataTable.DataTable({
         responsive: true,
         autoWidth: false,
@@ -209,7 +209,8 @@ function Table() {
     } else {
       // DataTables is already initialized, so we manually manage updates
       // to avoid destroying and reinitializing it.
-      console.log("Updating DataTable with new data:", rows);
+
+      // console.log("Updating DataTable with new data:", rows);
       let dataTableInstance = $dataTable.DataTable();
 
       // Temporarily disable state saving to avoid saving state during data update
@@ -225,7 +226,7 @@ function Table() {
     // Cleanup function to destroy the DataTable instance on component unmount (Don't delete this!)
     return () => {
       if ($.fn.dataTable.isDataTable($dataTable)) {
-        console.log("Destroying DataTable");
+        // console.log("Destroying DataTable");
         $dataTable.DataTable().destroy();
       }
     };
