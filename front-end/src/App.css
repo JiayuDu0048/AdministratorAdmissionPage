@@ -234,6 +234,17 @@ input[type="checkbox"] {
 }
 
 
+.justify-content-end{
+  font-family: "GothamMedium";
+}
+
+button, .btn{
+  font-family: "GothamMedium" !important;
+}
+
+.col-auto{
+  margin: 10px
+}
 
 @media (max-width: 900px) {
   .flexDropArea {

@@ -9,6 +9,8 @@ import CsvUpload from "./CSVupload";
 import { convertArrayOfObjectsToCSV, downloadCSV } from './CsvDownload';
 import axiosProvider from "../utils/axiosConfig";
 import io from 'socket.io-client';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faCheck, faTimes } from '@fortawesome/free-solid-svg-icons';
 
 const serverURL = import.meta.env.VITE_SERVER_URL;
 // Establish a connection to the WebSocket server
@@ -325,7 +327,7 @@ function Table() {
                 data-bs-backdrop="true"
                 style={{
                   marginRight: 10,
-                  width: 85,
+                  width: 90,
                   height: 40,
                   display: "flex",
                   paddingLeft: 20,
@@ -342,7 +344,7 @@ function Table() {
                 className="btn btn-primary"
                 style={{
                   marginRight: 10,
-                  width: 75,
+                  width: 83,
                   height: 40,
                   display: "flex",
                   paddingLeft: 20,
@@ -361,7 +363,7 @@ function Table() {
                 className="btn btn-secondary"
                 style={{
                   marginRight: 10,
-                  width: 130,
+                  width: 143,
                   height: 40,
                   display: "flex",
                   paddingLeft: 20,
@@ -618,9 +620,10 @@ function Table() {
                         onChange={(e) =>
                           accumulateStatusChange(row.NNumber, StatusName, e.target.value)
                         }
+                        style={{ color: row[StatusName] === "Finished" ? "#31b900" : "#ff0000", fontWeight: '600'}} 
                       >
                         {/* <option value=""></option> */}
-                        <option value="Unfinished">Unfinished</option>
+                        <option value="Unfinished" style={{color: 'red'}}>Unfinished</option>
                         <option value="Finished">Finished</option>
                        
                       </select>
@@ -629,11 +632,15 @@ function Table() {
                         {IsFinished(row[StatusName]) ? (
                           <div>
                             <div className="Green-glowing-dot"></div>
+                            {/* <FontAwesomeIcon icon={faCheck} style={{ color: 'green' , fontSize: '1.5em'}} /> */}
                             <div className="Green-text">Finished</div>
+                            
                           </div>
                         ) : (
                           <div>
                             <div className="Red-glowing-dot"></div>
+                            {/* <FontAwesomeIcon icon={faTimes} style={{ color: 'red',fontSize: '1.5em' }} />
+                             */}
                             <div className="Red-text">Unfinished</div>
                           </div>
                         )}
