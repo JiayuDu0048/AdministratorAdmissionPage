@@ -8,7 +8,13 @@ import "@popperjs/core";
 import CsvUpload from "./CSVupload";
 import { convertArrayOfObjectsToCSV, downloadCSV } from './CsvDownload';
 import axiosProvider from "../utils/axiosConfig";
+import io from 'socket.io-client';
 
+const serverURL = import.meta.env.VITE_SERVER_URL;
+// Establish a connection to the WebSocket server
+const socket = io(serverURL, {
+  path: '/socket.io' 
+});  
 
 function Table() {
   const startingIndex = 5;
@@ -85,7 +91,7 @@ function Table() {
       }
       
       const results = await Promise.all(responses); // Don't necessarily need this, since we have previous await before adding to responses
-      const allSuccess = results.every(result => result.status >= 200 && result.status < 300);
+      const allSuccess =  results.every(result => result.status >= 200 && result.status < 300);
   
       
       // If all successful, update the main rows state with the pending changes
@@ -175,10 +181,6 @@ function Table() {
         
           // console.log("Filtered data:", filteredData);
           setRows(filteredData);
-          if (filteredData.length > 0) {
-            console.log("Example row data:", filteredData[0]);
-          }
-        setRows(filteredData);
       } catch (error) {
         console.error('Error fetching data:', error);
       }
@@ -267,6 +269,8 @@ function Table() {
             }
             return row;
           });
+          socket.emit('request session update');
+          socket.emit('request status update');
         } else {
             console.error("Failed to delete rows");
         }
@@ -274,6 +278,7 @@ function Table() {
       console.error("Error deleting rows:", error);
     }  
     setSelectedRows([]);
+    
   }
 
  

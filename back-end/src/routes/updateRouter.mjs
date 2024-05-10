@@ -78,7 +78,6 @@ router.post('/updateStatus', async (req, res) => {
     }else {
       
       const statusCompletion = await calculateStatusCompletion();    
-      console.log('Emitting status update:', statusCompletion);   
       req.io.emit('status update', statusCompletion);
 
     }
