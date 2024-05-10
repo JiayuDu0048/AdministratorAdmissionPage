@@ -103,29 +103,37 @@ h2{
   padding:10px
 }
 
+
 li{
-  padding: 10px;
-  font-size: 20px;
-  /* font-family: 'GothamNarrow'; */
+  padding: 9px;
+  font-size: 19px;
+  color: #535755;
+  font-weight:400;
+  /* font-family: 'GothamMedium'; */
 }
 
 .flexDropArea{
-  /* display: flex; */
+  display: flex;
   margin-top: 20px;
-  margin-bottom: 50px;
+  margin-bottom: 20px;
 }
 
+.groupText{
+  max-width: 670px;
+  margin-right: -20px;
+}
 /*Upload button and text customize*/
 .styleUpload{
-  padding:15px;
+  /* margin-left: 0px; */
+  padding: 130px;
   border:2px dashed #b5b7ba;
   border-radius: 10px;
   margin-bottom: 30px;
   display: flex;
   justify-content: center;
   align-items: center; 
-  height: 170px;
-  width: 98%;
+  height: 250px;
+  width: 93%;
   margin: auto;
 }
 .textUpload{
@@ -223,4 +231,21 @@ input[type="checkbox"] {
   margin-top: 1px;
   margin-left: 10px;
   margin-bottom: 1px;
+}
+
+
+
+@media (max-width: 900px) {
+  .flexDropArea {
+    flex-direction: column;  /* Stack items vertically */
+  }
+/* 
+  .groupText, .styleUpload {
+    width: 90%;  
+    padding: 20px; 
+  }
+
+  .styleUpload {
+    padding: 50px 20px; 
+  } */
 }

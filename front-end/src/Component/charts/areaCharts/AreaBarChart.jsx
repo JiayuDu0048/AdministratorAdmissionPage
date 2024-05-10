@@ -164,7 +164,7 @@ const AreaBarChart = () => {
               tickSize={0}
               axisLine={false}
               tick={{
-                fill: `${theme === LIGHT_THEME ? "#676767" : "#FFFFFF"}`,
+                fill: "#676767",
                 fontSize: 14,
               }}
             />
@@ -175,12 +175,12 @@ const AreaBarChart = () => {
               tickSize={0}
               allowDataOverflow={true}
               tick={{
-                fill: `${theme === LIGHT_THEME ? "#676767" : "#FFFFFF"}`,
+                fill: "#676767",
               }}
             />
             <Bar
               dataKey="Increase"
-              fill="#475be8"
+              fill="#7F00FF"
               activeBar={false}
               isAnimationActive={false}
               barSize={24}
@@ -188,7 +188,7 @@ const AreaBarChart = () => {
             />
             <Bar
               dataKey="loss"
-              fill="#e3e7fc"
+              fill="#56018D"
               activeBar={false}
               isAnimationActive={false}
               barSize={24}
@@ -197,7 +197,7 @@ const AreaBarChart = () => {
             <Tooltip
             formatter={formatTooltipValue}
             cursor={{ fill: "transparent" }}
-            contentStyle={{ color: '#FFFFFF' }}
+            contentStyle={{ color: 'black' }}
             />
             <Legend
               iconType="circle"

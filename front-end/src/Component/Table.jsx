@@ -301,8 +301,8 @@ function Table() {
       <div className="marginGlobal">
       <div className="flexDropArea">
         <div className="groupText">
-            <h2>Drop .csv files here to upload student data </h2>
-            <ul style={{listStyleType: 'disc', marginLeft: '40px', marginTop: '20px', marginBottom: '20px'}}>
+            <h2>Upload Student Data </h2>
+            <ul style={{listStyleType: 'disc', marginLeft: '40px', marginTop: '20px', marginBottom: '20px', marginRight: '40px'}}>
                       <li> Drop only one csv file each time. This file must contain these columns: 'Campus ID', 'Preferred', 'Last', 'Email', 'Session'.</li>
                       <li> The value format for 'Session' must be: Coding for Game Design Session 1/2/3: xxxxx</li>
                       <li> You can drop files that contain previous student records. The system will only add new students into the database. </li>
@@ -480,7 +480,7 @@ function Table() {
 
         
         {/* Table */}
-       <div key={rows.length} className="table-responsive" style={{margin: '21px'}}> 
+       <div key={rows.length} className="table-responsive" style={{margin: '30px'}}> 
          {/* React feature: force re-render the table everytime the key is changed */}
         <table ref={tableRef} className="table table-sm table-hover" style={{marginTop: '15px'}}>
           <thead className="table-light">
