@@ -6,13 +6,6 @@ export function convertArrayOfObjectsToCSV(array) {
     const header = Object.keys(array[0]).join(',');
   
     // Map the rows
-    // const csvRows = array.map(row =>
-    //   Object.values(row)
-    //     .map(field =>
-    //       `"${String(field).replace(/"/g, '""')}"` // Escape double quotes
-    //     ).join(',')
-    // );
-
     const csvRows = array.map(row =>
       Object.keys(row).map(key => {
           let value = row[key];

@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import Papa from "papaparse";
 import axiosProvider from "../utils/axiosConfig";
 import PopupContent from "./popUpContent";
+import { updateBarStatsAndEmit } from "../../../back-end/src/routes/calculations.mjs";
 
 function CsvUpload({onCsvData}) {
     const [dragging, setDragging] = useState(false);
@@ -97,8 +98,6 @@ function CsvUpload({onCsvData}) {
                 // After parsing, send the data to the backend
                 sendDataToBackend(preprocessedData);
                 setCsvFile(null);
-                socket.emit('request session update'); 
-                socket.emit('request bar chart update');
             },
             header: true,
         });

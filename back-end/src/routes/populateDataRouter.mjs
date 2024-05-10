@@ -1,5 +1,5 @@
 import Student from '../schemas/studentSchema.mjs';
-import { calculateSessionStats, calculateMonthlyStats, calculateStatusCompletion } from './calculations.mjs';
+import { calculateSessionStats, calculateStatusCompletion, updateBarStatsAndEmit } from './calculations.mjs';
 
 // Populate all student info to db, and check whether each student already exists in db
 const populateDataRouter = async (req, res) => {
@@ -18,11 +18,10 @@ const populateDataRouter = async (req, res) => {
 
         // Update the stats in AreaCards by socket
         const sessionStats = await calculateSessionStats();
-        const monthlyStats = await calculateMonthlyStats(); // monthlyStats = {newAdditions, deletions}
         const statusCompletion = await calculateStatusCompletion();
-          
+        
+        await updateBarStatsAndEmit(req);   
         req.io.emit('update sessions', sessionStats);
-        req.io.emit('update bar chart', monthlyStats);
         req.io.emit('status update', statusCompletion);
 
         res.status(201).send(insertedStudents);

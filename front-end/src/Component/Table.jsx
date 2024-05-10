@@ -259,7 +259,7 @@ function Table() {
           });
           socket.emit('request session update');
           socket.emit('request status update');
-          socket.emit('request bar chart update');
+          
         } else {
             console.error("Failed to delete rows");
         }

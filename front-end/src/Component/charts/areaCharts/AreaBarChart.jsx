@@ -82,16 +82,20 @@ const AreaBarChart = () => {
 
   // Listen for bar chart updates
   useEffect(() => {
-      
-      socket.on('update bar chart', (monthlyStats) => {
-          setData(formatData(monthlyStats));
-      });
+    socket.on('update-stats', (data) => {
+        setData(formatData(data.monthlyStats));
+        setTotalStudents(data.totalStudents);
+        const lastMonth = new Date();
+        lastMonth.setMonth(lastMonth.getMonth() - 1);
+        const lastMonthCount = data.monthlyStats.newAdditions.find(m => m._id.month === lastMonth.getMonth() + 1)?.count || 0;
+        setLastMonthStudents(lastMonthCount);
+    });
 
-      return () => {
-          socket.off('update bar chart');
-      };
-      
+    return () => {
+        socket.off('update-stats');
+    };
   }, []);
+
 
 
   const formatData = (rawData) => {
