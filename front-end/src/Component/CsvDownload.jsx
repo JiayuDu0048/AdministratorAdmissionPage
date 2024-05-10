@@ -6,11 +6,21 @@ export function convertArrayOfObjectsToCSV(array) {
     const header = Object.keys(array[0]).join(',');
   
     // Map the rows
+    // const csvRows = array.map(row =>
+    //   Object.values(row)
+    //     .map(field =>
+    //       `"${String(field).replace(/"/g, '""')}"` // Escape double quotes
+    //     ).join(',')
+    // );
+
     const csvRows = array.map(row =>
-      Object.values(row)
-        .map(field =>
-          `"${String(field).replace(/"/g, '""')}"` // Escape double quotes
-        ).join(',')
+      Object.keys(row).map(key => {
+          let value = row[key];
+          if (typeof value === 'boolean') { // Adjust for boolean values to match web presentation
+              value = value ? 'Finished' : 'Unfinished';
+          }
+          return `"${String(value).replace(/"/g, '""')}"`; // Escape double quotes
+      }).join(',')
     );
   
     // Combine header and rows
@@ -18,7 +28,7 @@ export function convertArrayOfObjectsToCSV(array) {
   }
   
 
-  
+
 // Function to trigger the download
 export function downloadCSV(csvString, filename) {
 // Create a Blob with the CSV string

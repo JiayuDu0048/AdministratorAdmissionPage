@@ -21,8 +21,6 @@ function Table() {
   const [rows, setRows] = useState([]);
   const StatusNames = rows[0] ? Object.keys(rows[0]).slice(startingIndex) : [];
   const [pendingChanges, setPendingChanges] = useState({ emailUpdates: {}, statusUpdates: {} });
-  const [sessionChanged, setSessionChanged] = useState(false);
-  const [statusChanged, setStatusChanged] = useState(false);
 
   //Save pending changes function
   //Only save email changes
@@ -41,7 +39,7 @@ function Table() {
   const accumulateStatusChange = (NNumber, StatusName, newStatus) => {
     setRows(currentRows =>
       currentRows.map(row =>
-        row.NNumber === NNumber ? { ...row, [StatusName]: newStatus } : row
+        row.NNumber === NNumber ? { ...row, [StatusName]: newStatus, SessionModality : StatusName === "Session" ? getStatus(newStatus) : row.SessionModality } : row
       ));
 
     setPendingChanges(prev => ({
@@ -49,12 +47,6 @@ function Table() {
       statusUpdates: { ...prev.statusUpdates, [NNumber]: { ...prev.statusUpdates[NNumber], [StatusName]: newStatus } }
     }));
 
-    if (StatusName === "Session") {
-      setSessionChanged(true);
-    }
-    if (StatusName.endsWith('Status')){
-      setStatusChanged(true);
-    }
   };
 
   //Edit Mode function
@@ -106,14 +98,10 @@ function Table() {
           };
         }));
         
-        if (sessionChanged) {
-          // Emit an event from the frontend to request updated session stats
-          // This requires the backend to have an endpoint listening for this event
-          socket.emit('request session update');
-        }
-        if (statusChanged){
-          socket.emit('request status update');
-        }
+        // Emit an event from the frontend to request updated session stats
+        // This requires the backend to have an endpoint listening for this event
+        socket.emit('request session update');
+        socket.emit('request status update');
 
       }else{
         //TODO: set error message window
@@ -271,6 +259,7 @@ function Table() {
           });
           socket.emit('request session update');
           socket.emit('request status update');
+          socket.emit('request bar chart update');
         } else {
             console.error("Failed to delete rows");
         }

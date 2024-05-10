@@ -13,6 +13,13 @@ import { FaArrowUpLong } from 'react-icons/fa6';
 import { LIGHT_THEME } from '../constant/themeConstants';
 import './AreaCharts.scss';
 import axiosProvider from '../../../utils/axiosConfig';
+import io from 'socket.io-client';
+const serverURL = import.meta.env.VITE_SERVER_URL;
+// Establish a connection to the WebSocket server
+const socket = io(serverURL, {
+  path: '/socket.io' 
+});  
+
 
 const AreaBarChart = () => {
   const { theme } = useContext(ThemeContext);
@@ -35,6 +42,7 @@ const AreaBarChart = () => {
     }
   };
 
+  // Set Percentage Increase than the last month
   useEffect(() => {
     if (lastMonthStudents > 0) {
       const change = ((totalStudents - lastMonthStudents) / lastMonthStudents) * 100;
@@ -45,6 +53,7 @@ const AreaBarChart = () => {
   }, [totalStudents, lastMonthStudents]);
 
   
+  // Set monthly stats in the bar chart
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -68,6 +77,20 @@ const AreaBarChart = () => {
 
     fetchData();
     fetchTotalStudents();
+  }, []);
+
+
+  // Listen for bar chart updates
+  useEffect(() => {
+      
+      socket.on('update bar chart', (monthlyStats) => {
+          setData(formatData(monthlyStats));
+      });
+
+      return () => {
+          socket.off('update bar chart');
+      };
+      
   }, []);
 
 

@@ -98,6 +98,7 @@ function CsvUpload({onCsvData}) {
                 sendDataToBackend(preprocessedData);
                 setCsvFile(null);
                 socket.emit('request session update'); 
+                socket.emit('request bar chart update');
             },
             header: true,
         });

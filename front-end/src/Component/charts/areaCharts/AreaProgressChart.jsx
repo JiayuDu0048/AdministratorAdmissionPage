@@ -15,7 +15,7 @@ const AreaProgressChart = () => {
     const fetchStatusCompletion = async () => {
       try {
         const response = await axiosProvider.get('/api/status-completion');
-        setData(response.data.data); // Assuming the endpoint returns an object with a 'data' array
+        setData(response.data); // Assuming the endpoint returns an object with a 'data' array
       } catch (error) {
         console.error('Error fetching status completion data:', error);
       }
