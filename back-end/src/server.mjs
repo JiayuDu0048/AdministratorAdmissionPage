@@ -1,13 +1,15 @@
 #!/usr/bin/env node
-import server from "./app.mjs"
+import { server } from "./app.mjs"
 
 // which port to listen for HTTP(S) requests
-const port = process.env.SERVER_PORT
+const PORT = process.env.SERVER_PORT
 
 // call a function to start listening to the port
-const listener = server.listen(port, function () {
-  console.log(`Server listening on port: ${port}`)
-})
+const listener = server.listen(PORT, () => {
+  console.log(`Server listening on port ${PORT}`);
+}).on('error', err => {
+  console.error('Server failed to start:', err);
+});
 
 // a function to stop listening to the port
 const close = () => {

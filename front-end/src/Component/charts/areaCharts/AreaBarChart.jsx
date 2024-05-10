@@ -1,4 +1,4 @@
-import { useContext } from "react";
+import React, { useEffect, useState, useContext } from 'react';
 import {
   BarChart,
   Bar,
@@ -7,123 +7,197 @@ import {
   Tooltip,
   Legend,
   ResponsiveContainer,
-} from "recharts";
-import { ThemeContext } from "../context/ThemeContext";
-import { FaArrowUpLong } from "react-icons/fa6";
-import { LIGHT_THEME } from "../constant/themeConstants";
-import "./AreaCharts.scss";
+} from 'recharts';
+import { ThemeContext } from '../context/ThemeContext';
+import { FaArrowUpLong } from 'react-icons/fa6';
+import { LIGHT_THEME } from '../constant/themeConstants';
+import './AreaCharts.scss';
+import axiosProvider from '../../../utils/axiosConfig';
+import io from 'socket.io-client';
+const serverURL = import.meta.env.VITE_SERVER_URL;
+// Establish a connection to the WebSocket server
+const socket = io(serverURL, {
+  path: '/socket.io' 
+});  
 
-const data = [
-  {
-    month: "Jan",
-    loss: 70,
-    Increase: 100,
-  },
-  {
-    month: "Feb",
-    loss: 55,
-    Increase: 85,
-  },
-  {
-    month: "Mar",
-    loss: 35,
-    Increase: 90,
-  },
-  {
-    month: "April",
-    loss: 90,
-    Increase: 70,
-  },
-  {
-    month: "May",
-    loss: 55,
-    Increase: 80,
-  },
-  {
-    month: "Jun",
-    loss: 30,
-    Increase: 50,
-  },
-  {
-    month: "Jul",
-    loss: 32,
-    Increase: 75,
-  },
-  {
-    month: "Aug",
-    loss: 62,
-    Increase: 86,
-  },
-  {
-    month: "Sep",
-    loss: 55,
-    Increase: 78,
-  },
-];
 
 const AreaBarChart = () => {
   const { theme } = useContext(ThemeContext);
+  const [data, setData] = useState([]);
+  const [totalStudents, setTotalStudents] = useState(0);
+  const [percentageChange, setPercentageChange] = useState(0);
+  const [lastMonthStudents, setLastMonthStudents] = useState(0);
 
-  const formatTooltipValue = (value) => {
-    return `${value}k`;
+
+  const fetchTotalStudents = async () => {
+    try {
+      const response = await axiosProvider.get('/api/students/active-students');
+      setTotalStudents(response.data.length); // Set the number of active students
+      const lastMonth = new Date();
+      lastMonth.setMonth(lastMonth.getMonth() - 1);
+      setLastMonthStudents(response.data.find(m => m._id.month === lastMonth.getMonth() + 1)?.count || 0);
+      // console.log("lastMonth", lastMonthStudents)
+    } catch (error) {
+      console.error('Failed to fetch total number of active students:', error);
+    }
   };
 
-  const formatYAxisLabel = (value) => {
-    return `${value}k`;
+  // Set Percentage Increase than the last month
+  useEffect(() => {
+    if (lastMonthStudents > 0) {
+      const change = ((totalStudents - lastMonthStudents) / lastMonthStudents) * 100;
+      setPercentageChange(change.toFixed(2)); // rounding to two decimal places
+    } else {
+      setPercentageChange('N/A'); // Handle case when last month's data is zero
+    }
+  }, [totalStudents, lastMonthStudents]);
+
+  
+  // Set monthly stats in the bar chart
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await axiosProvider.get('/api/monthly-stats', {
+          headers: {
+            'Cache-Control': 'no-cache',
+            'Pragma': 'no-cache',
+            'Expires': '0'
+          }
+        });
+        // console.log("data received:", response.data)
+        if (response.data) {
+          setData(formatData(response.data));
+        } else {
+          throw new Error('No data received');
+        }
+      } catch (error) {
+        console.error('Failed to fetch monthly stats:', error.response || error);
+      }
+    };
+
+    fetchData();
+    fetchTotalStudents();
+  }, []);
+
+
+  // Listen for bar chart updates
+  useEffect(() => {
+    socket.on('update-stats', (data) => {
+        setData(formatData(data.monthlyStats));
+        setTotalStudents(data.totalStudents);
+        const lastMonth = new Date();
+        lastMonth.setMonth(lastMonth.getMonth() - 1);
+        const lastMonthCount = data.monthlyStats.newAdditions.find(m => m._id.month === lastMonth.getMonth() + 1)?.count || 0;
+        setLastMonthStudents(lastMonthCount);
+    });
+
+    return () => {
+        socket.off('update-stats');
+    };
+  }, []);
+
+
+
+  const formatData = (rawData) => {
+    const { newAdditions, deletions } = rawData;
+
+    // Initialize data for all months
+    const monthsData = Array.from({ length: 12 }, (_, index) => ({
+        month: getMonthName(index + 1),
+        Increase: 0,
+        loss: 0
+    }));
+
+    // Populate the data with received values
+    newAdditions.forEach(addition => {
+        const monthIndex = addition._id.month - 1; // month is 1-indexed, array is 0-indexed
+        monthsData[monthIndex].Increase = addition.count;
+    });
+
+    deletions.forEach(deletion => {
+        const monthIndex = deletion._id.month - 1; // month is 1-indexed, array is 0-indexed
+        monthsData[monthIndex].loss = deletion.count || 0; // Use the count or 0 if undefined
+    });
+
+    // console.log("monthsdata:", monthsData)
+    return monthsData;
+};
+
+
+  const getMonthName = (monthNumber) => {
+    const date = new Date();
+    date.setMonth(monthNumber - 1); // months are zero-indexed in JS
+    return date.toLocaleString('default', { month: 'short' });
   };
 
-  const formatLegendValue = (value) => {
-    return value.charAt(0).toUpperCase() + value.slice(1);
-  };
+  const formatTooltipValue = (value) => `${value}`;
+  const formatYAxisLabel = (value) => `${value}`;
+  const formatLegendValue = (value) => value.charAt(0).toUpperCase() + value.slice(1);
+ 
+  // console.log("Data at render:", data);
 
   return (
     <div className="bar-chart">
       <div className="bar-chart-info">
-        <h5 className="bar-chart-title">Total Student Number</h5>
+        <h5 className="bar-chart-title">Current Student Number</h5>
         <div className="chart-info-data">
-          <div className="info-data-value">32</div>
+          <div className="info-data-value">{totalStudents}</div>
           <div className="info-data-text">
             <FaArrowUpLong />
-            <p>5% than last month.</p>
+            <p>{percentageChange !== 'N/A' ? `${percentageChange}% than last month.` : 'No previous data'}</p>
           </div>
         </div>
       </div>
       <div className="bar-chart-wrapper">
-        <ResponsiveContainer width="100%" height="100%">
+      <ResponsiveContainer width="100%" height="100%">
           <BarChart
-            width={500}
-            height={200}
             data={data}
             margin={{
               top: 5,
-              right: 5,
-              left: 0,
+              right: 30,
+              left: 20,
               bottom: 5,
             }}
           >
             <XAxis
-              padding={{ left: 10 }}
               dataKey="month"
               tickSize={0}
               axisLine={false}
               tick={{
-                fill: `${theme === LIGHT_THEME ? "#676767" : "#FFFFFF"}`,
+                fill: "#676767",
                 fontSize: 14,
               }}
             />
             <YAxis
-              padding={{ bottom: 10, top: 10 }}
               tickFormatter={formatYAxisLabel}
               tickCount={6}
               axisLine={false}
               tickSize={0}
+              allowDataOverflow={true}
               tick={{
-                fill: `${theme === LIGHT_THEME ? "#676767" : "#FFFFFF"}`,
+                fill: "#676767",
               }}
             />
+            <Bar
+              dataKey="Increase"
+              fill="#7F00FF"
+              activeBar={false}
+              isAnimationActive={false}
+              barSize={24}
+              radius={[4, 4, 4, 4]}
+            />
+            <Bar
+              dataKey="loss"
+              fill="#56018D"
+              activeBar={false}
+              isAnimationActive={false}
+              barSize={24}
+              radius={[4, 4, 4, 4]}
+            />
             <Tooltip
-              formatter={formatTooltipValue}
-              cursor={{ fill: "transparent" }}
+            formatter={formatTooltipValue}
+            cursor={{ fill: "transparent" }}
+            contentStyle={{ color: 'black' }}
             />
             <Legend
               iconType="circle"
@@ -132,24 +206,8 @@ const AreaBarChart = () => {
               align="right"
               formatter={formatLegendValue}
             />
-            <Bar
-              dataKey="Increase"
-              fill="#475be8"
-              activeBar={false}
-              isAnimationActive={false}
-              barSize={24}
-              radius={[4, 4, 4, 4]}
-            />
-            <Bar
-              dataKey="loss"
-              fill="#e3e7fc"
-              activeBar={false}
-              isAnimationActive={false}
-              barSize={24}
-              radius={[4, 4, 4, 4]}
-            />
           </BarChart>
-        </ResponsiveContainer>
+      </ResponsiveContainer>
       </div>
     </div>
   );

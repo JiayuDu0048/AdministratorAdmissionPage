@@ -1,38 +1,58 @@
+import React, { useEffect, useState } from 'react';
 import AreaCard from "./AreaCard";
 import "./AreaCards.scss";
+import axiosProvider from '../../../utils/axiosConfig';
+import io from 'socket.io-client';
+
+const serverURL = import.meta.env.VITE_SERVER_URL;
+// Establish a connection to the WebSocket server
+const socket = io(serverURL, {
+  path: '/socket.io' 
+});  
 
 const AreaCards = () => {
+  const [sessions, setSessions] = useState([]);
+
+  useEffect(() => {
+    const fetchSessions = async () => {
+      try {
+        const { data } = await axiosProvider.get('/api/session-stats');
+        setSessions(data);
+      } catch (error) {
+        console.error('Error fetching session data:', error);
+      }
+    };
+
+    fetchSessions();
+
+    // Set up WebSocket listener for updates
+    socket.on('update sessions', (updatedSessions) => {
+      console.log('Received updated session data:', updatedSessions);
+      setSessions(updatedSessions);  // Update sessions state with new data
+    });
+    
+    // Clean up the effect by removing the event listener
+    return () => socket.off('update sessions');
+
+  }, []);
+
   return (
     <section className="content-area-cards">
-      <AreaCard
-        colors={["#e4e8ef", "#7F00FF"]}
-        percentFillValue={66}
-        cardInfo={{
-          title: "Session 1",
-          value: "20/30",
-          text: "20 Students in Session 1.",
-        }}
-      />
-      <AreaCard
-        colors={["#e4e8ef", "#7F00FF"]}
-        percentFillValue={50}
-        cardInfo={{
-          title: "Session 2",
-          value: "15/30",
-          text: "15 Students in Session 2",
-        }}
-      />
-      <AreaCard
-        colors={["#e4e8ef", "#7F00FF"]}
-        percentFillValue={33}
-        cardInfo={{
-          title: "Session 3",
-          value: "10/30",
-          text: "10 Students in Session 3",
-        }}
-      />
+      {sessions.map(session => (
+        <AreaCard
+          key={session._id}
+          colors={["#e4e8ef", "#7F00FF"]}
+          percentFillValue={(session.count / 30) * 100} // Assuming each session has a capacity of 30
+          cardInfo={{
+            title: `Session ${session._id}`,
+            value: `${session.count}/30`,
+            text: `${session.count} Students in Session ${session._id}.`
+          }}
+        />
+      ))}
     </section>
   );
 };
 
 export default AreaCards;
+

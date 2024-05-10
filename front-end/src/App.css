@@ -23,12 +23,16 @@
   font-family: 'GothamMedium', sans-serif;
 } */
 
-h2{
-  font-family: 'GothamBold', sans-serif;
-}
+
 
 body {
   overflow-x: hidden; /*Hide anything go out out the current screen size*/
+}
+
+h2{
+  font-family: 'GothamBold', sans-serif;
+  margin-top: 50px;
+  margin-left: 50px;
 }
 
 /*Navbar customize*/
@@ -99,22 +103,37 @@ body {
   padding:10px
 }
 
+
 li{
-  padding: 5px;
-  font-size: 17px;
+  padding: 9px;
+  font-size: 19px;
+  color: #535755;
+  font-weight:400;
+  /* font-family: 'GothamMedium'; */
 }
 
+.flexDropArea{
+  display: flex;
+  margin-top: 20px;
+  margin-bottom: 20px;
+}
+
+.groupText{
+  max-width: 650px;
+  margin-right: -20px;
+}
 /*Upload button and text customize*/
 .styleUpload{
-  padding:15px;
+  /* margin-left: 0px; */
+  padding: 160px;
   border:2px dashed #b5b7ba;
   border-radius: 10px;
   margin-bottom: 30px;
   display: flex;
   justify-content: center;
   align-items: center; 
-  height: 170px;
-  width: 98%;
+  height: 250px;
+  width: 90%;
   margin: auto;
 }
 .textUpload{
@@ -129,7 +148,7 @@ li{
 .editPositionController{
   position:relative;
   margin-left: 23px;
-  margin-top: 23px;
+  margin-top: 50px;
 }
 
 
@@ -212,4 +231,32 @@ input[type="checkbox"] {
   margin-top: 1px;
   margin-left: 10px;
   margin-bottom: 1px;
+}
+
+
+.justify-content-end{
+  font-family: "GothamMedium";
+}
+
+button, .btn{
+  font-family: "GothamMedium" !important;
+}
+
+.col-auto{
+  margin: 10px
+}
+
+@media (max-width: 900px) {
+  .flexDropArea {
+    flex-direction: column;  /* Stack items vertically */
+  }
+/* 
+  .groupText, .styleUpload {
+    width: 90%;  
+    padding: 20px; 
+  }
+
+  .styleUpload {
+    padding: 50px 20px; 
+  } */
 }

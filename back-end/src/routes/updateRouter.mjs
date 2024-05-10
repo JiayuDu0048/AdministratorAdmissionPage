@@ -1,5 +1,7 @@
 import express from 'express';
 import Student from '../schemas/studentSchema.mjs'; // Import Mongoose model
+import { calculateSessionStats, calculateStatusCompletion } from './calculations.mjs';
+
 
 const router = express.Router();
 
@@ -17,9 +19,11 @@ const getStatus = (sessionStr) => {
   };
 
 // Test whether the server reaches updateRouter.mjs
-router.get('/test', (req, res) => {
-    res.send('Router is accessible');
-  });
+// router.get('/test', (req, res) => {
+//     res.send('Router is accessible');
+//   });
+
+
 
 // Update email endpoint
 router.post('/updateEmail', async (req, res) => { 
@@ -37,7 +41,10 @@ router.post('/updateEmail', async (req, res) => {
   }
 });
 
-// Update all status endpoint
+
+
+
+// Update all status + session endpoint
 router.post('/updateStatus', async (req, res) => {
   const { NNumber, StatusName} = req.body;
 
@@ -56,12 +63,24 @@ router.post('/updateStatus', async (req, res) => {
         const modality = getStatus(newStatus);
         const update = {"SessionModality": modality };
         const result = await Student.findOneAndUpdate({ NNumber }, update, { new: true });
+
+        // Update the stats in AreaCards by socket
+        const sessionStats = await calculateSessionStats();
+        req.io.emit('update sessions', sessionStats);
+
+    }else {
+      
+      const statusCompletion = await calculateStatusCompletion();    
+      req.io.emit('status update', statusCompletion);
+
     }
     res.json(result);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 });
+
+
 
 
 //Update only Unity Status Endpoint
@@ -76,6 +95,7 @@ router.post('/updateOnlyUnityStatus', async(req, res) => {
     res.status(500).json({ message: error.message });
   }
 });
+
 
 
 export default router;

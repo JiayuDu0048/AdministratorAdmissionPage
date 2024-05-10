@@ -8,16 +8,24 @@ import "@popperjs/core";
 import CsvUpload from "./CSVupload";
 import { convertArrayOfObjectsToCSV, downloadCSV } from './CsvDownload';
 import axiosProvider from "../utils/axiosConfig";
+import io from 'socket.io-client';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faCheck, faTimes } from '@fortawesome/free-solid-svg-icons';
 
+const serverURL = import.meta.env.VITE_SERVER_URL;
+// Establish a connection to the WebSocket server
+const socket = io(serverURL, {
+  path: '/socket.io' 
+});  
 
 function Table() {
   const startingIndex = 5;
-  // const StatusNames = Object.keys(rows[0]).slice(startingIndex);
   const [rows, setRows] = useState([]);
   const StatusNames = rows[0] ? Object.keys(rows[0]).slice(startingIndex) : [];
   const [pendingChanges, setPendingChanges] = useState({ emailUpdates: {}, statusUpdates: {} });
 
   //Save pending changes function
+  //Only save email changes
   const accumulateEmailChange = (NNumber, newEmail) => {
     setRows(currentRows =>
       currentRows.map(row =>
@@ -29,16 +37,18 @@ function Table() {
     }));
   };
 
+  //Save pending changes: session, all status
   const accumulateStatusChange = (NNumber, StatusName, newStatus) => {
     setRows(currentRows =>
       currentRows.map(row =>
-        row.NNumber === NNumber ? { ...row, [StatusName]: newStatus } : row
+        row.NNumber === NNumber ? { ...row, [StatusName]: newStatus, SessionModality : StatusName === "Session" ? getStatus(newStatus) : row.SessionModality } : row
       ));
 
     setPendingChanges(prev => ({
       ...prev,
       statusUpdates: { ...prev.statusUpdates, [NNumber]: { ...prev.statusUpdates[NNumber], [StatusName]: newStatus } }
     }));
+
   };
 
   //Edit Mode function
@@ -75,8 +85,8 @@ function Table() {
       }
       
       const results = await Promise.all(responses); // Don't necessarily need this, since we have previous await before adding to responses
-      const allSuccess = results.every(result => result.status >= 200 && result.status < 300);
-      console.log(results);
+      const allSuccess =  results.every(result => result.status >= 200 && result.status < 300);
+  
       
       // If all successful, update the main rows state with the pending changes
       if(allSuccess){
@@ -89,6 +99,12 @@ function Table() {
             ...statusUpdate
           };
         }));
+        
+        // Emit an event from the frontend to request updated session stats
+        // This requires the backend to have an endpoint listening for this event
+        socket.emit('request session update');
+        socket.emit('request status update');
+
       }else{
         //TODO: set error message window
       }
@@ -113,10 +129,13 @@ function Table() {
 
             // Iterate over new data and add to the map if not already present
             newData.forEach(row => {
-                if (!existingMap.has(row.NNumber)) {
-                    existingMap.set(row.NNumber, row);
-                }
-            }); 
+              if (!existingMap.has(row.NNumber)) {
+                  const { deleted, deletedAt, addedAt, __v, _id, ...keepAttrs } = row;
+                  existingMap.set(row.NNumber, keepAttrs); // Only keep desired attributes
+              }
+          });
+
+            
             return Array.from(existingMap.values());
         });
     } else {
@@ -134,13 +153,14 @@ function Table() {
   const tableRef = useRef(null);
   useEffect(() => {
     const fetchData = async () => {
+    
       try {
         const response = await axiosProvider.get('/api/students', {
           withCredentials: true
         });
         const filteredData = response.data
           .filter(row => !row.deleted) // Exclude deleted records
-          .map(({ deleted, deletedAt, __v, _id, ...keepAttrs }) => ({
+          .map(({ deleted, deletedAt, addedAt,  __v, _id, ...keepAttrs }) => ({
             ...keepAttrs, 
             AdmissionStatus: keepAttrs.AdmissionStatus ? 'Finished' : 'Unfinished',
             MatriculationStatus: keepAttrs.MatriculationStatus ? 'Finished' : 'Unfinished',
@@ -149,10 +169,13 @@ function Table() {
             SurveyStatus: keepAttrs.SurveyStatus ? 'Finished' : 'Unfinished',
           }));
         
-        setRows(filteredData);
+          // console.log("Filtered data:", filteredData);
+          setRows(filteredData);
       } catch (error) {
         console.error('Error fetching data:', error);
       }
+      
+    
     };
   
     fetchData();
@@ -160,19 +183,26 @@ function Table() {
   
 
   useEffect(() => {
+    
     const $dataTable = $(tableRef.current);
+    // console.log("Rows data before DataTable operation:", rows);
 
     if (!$.fn.dataTable.isDataTable($dataTable)) {
       // Initialize DataTables only if it hasn't been initialized
+
+      // console.log("Initializing DataTable with data:", rows);
       $dataTable.DataTable({
         responsive: true,
         autoWidth: false,
         stateSave: true, // Enable state saving to remember the table's state
+        
       });
       
     } else {
       // DataTables is already initialized, so we manually manage updates
       // to avoid destroying and reinitializing it.
+
+      // console.log("Updating DataTable with new data:", rows);
       let dataTableInstance = $dataTable.DataTable();
 
       // Temporarily disable state saving to avoid saving state during data update
@@ -188,6 +218,7 @@ function Table() {
     // Cleanup function to destroy the DataTable instance on component unmount (Don't delete this!)
     return () => {
       if ($.fn.dataTable.isDataTable($dataTable)) {
+        // console.log("Destroying DataTable");
         $dataTable.DataTable().destroy();
       }
     };
@@ -228,6 +259,9 @@ function Table() {
             }
             return row;
           });
+          socket.emit('request session update');
+          socket.emit('request status update');
+          
         } else {
             console.error("Failed to delete rows");
         }
@@ -235,6 +269,7 @@ function Table() {
       console.error("Error deleting rows:", error);
     }  
     setSelectedRows([]);
+    
   }
 
  
@@ -263,22 +298,25 @@ function Table() {
   };
  
 
-  return (
+  return ( 
     <>
       <div className="marginGlobal">
-        <h2 style={{marginLeft: '30px'}}>Drop .csv files here to upload student data </h2>
-        <ul style={{listStyleType: 'disc', margin: '23px'}}>
-                  <li> Drop only one csv file each time. This file must contain these columns: 'Campus ID', 'Preferred', 'Last', 'Email', 'Session'.</li>
-                  <li> The value format for 'Session' must be: Coding for Game Design Session 1/2/3: xxxxx</li>
-                  <li> You can drop files that contain previous student records. The system will only add new students into the database. </li>
-        </ul>
+      <div className="flexDropArea">
+        <div className="groupText">
+            <h2>Upload Student Data </h2>
+            <ul style={{listStyleType: 'disc', marginLeft: '40px', marginTop: '20px', marginBottom: '20px', marginRight: '40px'}}>
+                      <li> Drop only one csv file each time. This file must contain these columns: 'Campus ID', 'Preferred', 'Last', 'Email', 'Session'.</li>
+                      <li> The value format for 'Session' must be: Coding for Game Design Session 1/2/3: xxxxx</li>
+                      <li> You can drop files that contain previous student records. The system will only add new students into the database. </li>
+            </ul>
+          </div>
         {/* Upload function */}
         <CsvUpload onCsvData={handleCsvData}> </CsvUpload>
-
+        </div>
         
 
         <div className="headerContainer">
-          <h2 style={{marginLeft: '23px', marginTop: '23px'}}> Student Database </h2>
+          <h2 style={{marginTop: '50px', marginLeft: '30px'}}> Student Database </h2>
           {/* Edit Mode & Save button*/}
           <div className="editPositionController" >
             {isEditing ? (
@@ -289,7 +327,7 @@ function Table() {
                 data-bs-backdrop="true"
                 style={{
                   marginRight: 10,
-                  width: 85,
+                  width: 90,
                   height: 40,
                   display: "flex",
                   paddingLeft: 20,
@@ -306,7 +344,7 @@ function Table() {
                 className="btn btn-primary"
                 style={{
                   marginRight: 10,
-                  width: 75,
+                  width: 83,
                   height: 40,
                   display: "flex",
                   paddingLeft: 20,
@@ -325,7 +363,7 @@ function Table() {
                 className="btn btn-secondary"
                 style={{
                   marginRight: 10,
-                  width: 130,
+                  width: 143,
                   height: 40,
                   display: "flex",
                   paddingLeft: 20,
@@ -333,7 +371,7 @@ function Table() {
                   fontSize: '20px',
                   borderRadius: '20px',
                   marginLeft: '23px',
-                  marginTop: '23px'
+                  marginTop: '50px'
                 }}
                 type="button"
                 onClick={() => handleDownloadClick(rows)}
@@ -444,7 +482,7 @@ function Table() {
 
         
         {/* Table */}
-       <div key={rows.length} className="table-responsive" style={{margin: '21px'}}> 
+       <div key={rows.length} className="table-responsive" style={{margin: '30px'}}> 
          {/* React feature: force re-render the table everytime the key is changed */}
         <table ref={tableRef} className="table table-sm table-hover" style={{marginTop: '15px'}}>
           <thead className="table-light">
@@ -582,9 +620,10 @@ function Table() {
                         onChange={(e) =>
                           accumulateStatusChange(row.NNumber, StatusName, e.target.value)
                         }
+                        style={{ color: row[StatusName] === "Finished" ? "#31b900" : "#ff0000", fontWeight: '600'}} 
                       >
                         {/* <option value=""></option> */}
-                        <option value="Unfinished">Unfinished</option>
+                        <option value="Unfinished" style={{color: 'red'}}>Unfinished</option>
                         <option value="Finished">Finished</option>
                        
                       </select>
@@ -593,11 +632,15 @@ function Table() {
                         {IsFinished(row[StatusName]) ? (
                           <div>
                             <div className="Green-glowing-dot"></div>
+                            {/* <FontAwesomeIcon icon={faCheck} style={{ color: 'green' , fontSize: '1.5em'}} /> */}
                             <div className="Green-text">Finished</div>
+                            
                           </div>
                         ) : (
                           <div>
                             <div className="Red-glowing-dot"></div>
+                            {/* <FontAwesomeIcon icon={faTimes} style={{ color: 'red',fontSize: '1.5em' }} />
+                             */}
                             <div className="Red-text">Unfinished</div>
                           </div>
                         )}

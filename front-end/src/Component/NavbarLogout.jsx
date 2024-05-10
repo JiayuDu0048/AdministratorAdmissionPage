@@ -23,7 +23,7 @@ function NavbarLogout() {
               ></img>
             </a>
           </div>
-          <div className="justify-content-end">
+          <div className="justify-content-end" style={{marginRight: '40px'}}>
             <button className="btn btn-secondary" type="button" onClick={handleLogout}>
               Log Out
             </button>

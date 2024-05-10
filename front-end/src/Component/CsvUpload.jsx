@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import Papa from "papaparse";
 import axiosProvider from "../utils/axiosConfig";
 import PopupContent from "./popUpContent";
+import { updateBarStatsAndEmit } from "../../../back-end/src/routes/calculations.mjs";
 
 function CsvUpload({onCsvData}) {
     const [dragging, setDragging] = useState(false);
@@ -111,6 +112,7 @@ function CsvUpload({onCsvData}) {
                 headers: {
                   'Content-Type': 'application/json'
                 }});
+            
             setTitle("Upload Success!");
             setMessage("All entries have been uploaded.");
             onCsvData(response.data);  // callback function: send data from child to parent
@@ -153,12 +155,12 @@ function CsvUpload({onCsvData}) {
                         </div>
                         <div className="row justify-content-end">
                             <div className="col-auto">
-                                <button onClick={handleRemoveFile} className="btn btn-danger btn-lg" style={{ width: '100px' }}>
+                                <button onClick={handleRemoveFile} className="btn btn-danger btn-lg" style={{ width: '110px' }}>
                                     Remove
                                 </button>
                             </div>
                             <div className="col-auto">
-                                <button type="button" className="btn btn-primary btn-lg" onClick={handleUpload} style={{ width: '100px' }}>
+                                <button type="button" className="btn btn-primary btn-lg" onClick={handleUpload} style={{ width: '110px' }}>
                                     Upload
                                 </button>
                             </div>

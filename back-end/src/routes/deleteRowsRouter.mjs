@@ -1,4 +1,5 @@
 import Student from '../schemas/studentSchema.mjs';
+import {  calculateSessionStats, calculateStatusCompletion, updateBarStatsAndEmit} from './calculations.mjs';
 
 const deleteRowsRouter = async(req, res) => {
 
@@ -12,8 +13,18 @@ const deleteRowsRouter = async(req, res) => {
             { $set: { deleted: true, deletedAt: new Date() } }
           );
 
-        if (softDeleteResult.nModified > 0) {
-            res.status(200).json({ message: `${softDeleteResult.nModified} rows marked as deleted.`  });
+        
+        if (softDeleteResult.modifiedCount > 0) {
+            res.status(200).json({ message: `${softDeleteResult.modifiedCount} rows marked as deleted.`  });
+
+            // Update the stats in AreaCards by socket
+            const sessionStats = await calculateSessionStats();
+            const statusCompletion = await calculateStatusCompletion();   
+            
+            await updateBarStatsAndEmit(req);
+            req.io.emit('update sessions', sessionStats);
+            req.io.emit('status update', statusCompletion);
+
         } else {
             res.status(404).json({ message: "No rows found to delete." });
         }
@@ -22,5 +33,7 @@ const deleteRowsRouter = async(req, res) => {
         res.status(500).json({ message: "Internal server error during deletion." });
     }
 }
+
+
 
 export default deleteRowsRouter;

@@ -1,8 +1,8 @@
 .content-area-cards {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    margin:30px;
-    gap: 30px;
+    margin: 50px;
+    gap: 20px;
   
     @media (max-width: 992px) {
       grid-template-columns: repeat(2, 1fr);
