@@ -119,13 +119,13 @@ li{
 }
 
 .groupText{
-  max-width: 670px;
+  max-width: 650px;
   margin-right: -20px;
 }
 /*Upload button and text customize*/
 .styleUpload{
   /* margin-left: 0px; */
-  padding: 130px;
+  padding: 160px;
   border:2px dashed #b5b7ba;
   border-radius: 10px;
   margin-bottom: 30px;
@@ -133,7 +133,7 @@ li{
   justify-content: center;
   align-items: center; 
   height: 250px;
-  width: 93%;
+  width: 90%;
   margin: auto;
 }
 .textUpload{
