@@ -8,6 +8,7 @@ import Table from "./Component/Table";
 import LoginPage from "./Component/LoginPage";
 import Dashboard from "./Component/charts/DashboardScreen";
 import BaseLayout from "./layouts/BaseLayout";
+import Footer from "./Component/Footer";
 import GothamMedium from '../assets/Gotham-Medium.otf'
 
 
@@ -41,6 +42,7 @@ function TablePage() {
       <NavbarLogout />
       <Dashboard />
       <Table />
+      <Footer />
     </>
   );
 }
