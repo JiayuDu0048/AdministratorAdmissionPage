@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import $ from "jquery";
 import "datatables.net";
 import "datatables.net-bs5";
@@ -9,7 +10,7 @@ import CsvUpload from "./CSVupload";
 import { convertArrayOfObjectsToCSV, downloadCSV } from './CsvDownload';
 import axiosProvider from "../utils/axiosConfig";
 import io from 'socket.io-client';
-import { set } from "mongoose";
+
 
 const serverURL = import.meta.env.VITE_SERVER_URL;
 // Establish a connection to the WebSocket server
@@ -19,6 +20,7 @@ const socket = io(serverURL, {
 
 function Table() {
   const startingIndex = 5;
+  const navigate = useNavigate();
   const [rows, setRows] = useState([]);
   const StatusNames = rows[0] ? Object.keys(rows[0]).slice(startingIndex) : [];
   const [deletedRows, setDeletedRows] = useState([]);
@@ -394,6 +396,10 @@ function Table() {
     setSelectedRows([]);
     
   }
+
+  const handleHelpClick = () => {
+    navigate("/help"); // Navigate to the Help page
+  };
 
 
 
@@ -890,7 +896,7 @@ function Table() {
 
 
         {/* Table for Recently Deleted Rows */}
-          {isShowing && (
+        {isShowing && (
             <div className="table-responsive" style={{ margin: '30px' }}>
             <table ref={deletedTableRef} className="table table-sm table-hover" style={{marginTop: '15px'}}>
               <thead className="table-light">
@@ -1018,9 +1024,34 @@ function Table() {
             </div>
           )}
 
-
-    
-
+          {/* Need Help Link */}
+          <div className="headerContainer" style={{marginBottom: '30px'}}>
+          <h2 style={{marginTop: '50px', marginLeft: '30px'}}> Still Need Help?</h2>
+          {/* Help button*/}
+          <div className="editPositionController" >
+              <button
+                className="btn btn-outline-secondary"
+                // data-bs-toggle="modal"
+                // data-bs-target="#RecoverConfirm"
+                data-bs-backdrop="true"
+                style={{
+                  marginRight: 10,
+                  width: 88,
+                  height: 40,
+                  display: "flex",
+                  paddingLeft: 20,
+                  alignItems: "center",
+                  fontSize: '20px',
+                  borderRadius: '20px',
+           
+                }}
+                type="button"
+                onClick={handleHelpClick}
+              >
+                Help
+              </button>
+          </div>
+        </div>
           
     </div>
 
