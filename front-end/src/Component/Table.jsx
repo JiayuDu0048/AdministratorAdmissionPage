@@ -9,8 +9,6 @@ import CsvUpload from "./CSVupload";
 import { convertArrayOfObjectsToCSV, downloadCSV } from './CsvDownload';
 import axiosProvider from "../utils/axiosConfig";
 import io from 'socket.io-client';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCheck, faTimes } from '@fortawesome/free-solid-svg-icons';
 
 const serverURL = import.meta.env.VITE_SERVER_URL;
 // Establish a connection to the WebSocket server
@@ -22,8 +20,14 @@ function Table() {
   const startingIndex = 5;
   const [rows, setRows] = useState([]);
   const StatusNames = rows[0] ? Object.keys(rows[0]).slice(startingIndex) : [];
+  const [deletedRows, setDeletedRows] = useState([]);
   const [pendingChanges, setPendingChanges] = useState({ emailUpdates: {}, statusUpdates: {} });
+  const [isEditing, setIsEditing] = useState(false);
+  const [isShowing, setIsShowing] = useState(false);
+  const [selectedRows, setSelectedRows] = useState([]);
+  const [selectDeletedRows, setSelectDeletedRows] = useState([]);
 
+  
   //Save pending changes function
   //Only save email changes
   const accumulateEmailChange = (NNumber, newEmail) => {
@@ -51,8 +55,23 @@ function Table() {
 
   };
 
+  //Show Mode function
+  function handleShowClick() {
+    setIsEditing(false);
+    setIsShowing(true);
+    setSelectedRows([]);
+    //TODO: uncheck selected rows
+  }
+  function handleHideClick() {
+    setIsShowing(false);
+    setSelectDeletedRows([]);
+    //TODO: uncheck select deleted rows
+  }
+  const handleRecoverSaveClick = async() => {
+    setIsShowing(false);
+  }
+
   //Edit Mode function
-  const [isEditing, setIsEditing] = useState(false);
   function handleEditClick() {
     setIsEditing(true);
   }
@@ -151,6 +170,7 @@ function Table() {
   
   //Load the table using datatable and reload when the rows changed
   const tableRef = useRef(null);
+  const deletedTableRef = useRef(null);
   useEffect(() => {
     const fetchData = async () => {
     
@@ -171,6 +191,19 @@ function Table() {
         
           // console.log("Filtered data:", filteredData);
           setRows(filteredData);
+
+          const deletedData  = response.data
+          .filter(row => row.deleted) // Exclude deleted records
+          .map(({ deleted, deletedAt, addedAt,  __v, _id, ...keepAttrs }) => ({
+            ...keepAttrs, 
+            AdmissionStatus: keepAttrs.AdmissionStatus ? 'Finished' : 'Unfinished',
+            MatriculationStatus: keepAttrs.MatriculationStatus ? 'Finished' : 'Unfinished',
+            UnityStatus: keepAttrs.UnityStatus ? 'Finished' : 'Unfinished',
+            CourseraStatus: keepAttrs.CourseraStatus ? 'Finished' : 'Unfinished',
+            SurveyStatus: keepAttrs.SurveyStatus ? 'Finished' : 'Unfinished',
+          }));
+          setDeletedRows(deletedData);
+
       } catch (error) {
         console.error('Error fetching data:', error);
       }
@@ -195,7 +228,6 @@ function Table() {
         responsive: true,
         autoWidth: false,
         stateSave: true, // Enable state saving to remember the table's state
-        
       });
       
     } else {
@@ -224,17 +256,88 @@ function Table() {
     };
   }, [rows]); // Only re-run when `rows` changes
 
+
+  useEffect(() => {
+    // Initialize deleted rows DataTable
+    if (isShowing) {
+      const $deletedTable = $(deletedTableRef.current);
+      if (!$.fn.dataTable.isDataTable($deletedTable)) {
+        $deletedTable.DataTable({
+          responsive: true,
+          autoWidth: false,
+          stateSave: true,
+          searching: true,
+          paging: true,
+          info: true
+        });
+      } else {
+        let dataTableInstance = $deletedTable.DataTable();
+        dataTableInstance.state.clear();
+        dataTableInstance.rows.add(deletedRows).draw();
+        dataTableInstance.state.save();
+      }
+
+      return () => {
+        if ($.fn.dataTable.isDataTable($deletedTable)) {
+          $deletedTable.DataTable().destroy();
+        }
+      };
+    }
+  }, [deletedRows, isShowing]);
+
   
 
-  //Multiple choice and delete function
-  const [selectedRows, setSelectedRows] = useState([]);
-  function handleCheckboxChange(rowNNumber) {
-    if (selectedRows.includes(rowNNumber)) {
-      setSelectedRows(selectedRows.filter((NNumber) => NNumber !== rowNNumber));
-    } else {
-      setSelectedRows([...selectedRows, rowNNumber]);
+  
+
+  // Multiple choice and delete function
+  function handleCheckboxChange(rowNNumber) { 
+     
+    if(isShowing){
+          //Recover rows in deleted table
+      if (selectDeletedRows.includes(rowNNumber)) {
+        setSelectDeletedRows(selectDeletedRows.filter((NNumber) => NNumber !== rowNNumber));
+      } else {
+        setSelectDeletedRows([...selectDeletedRows, rowNNumber]);
+      }
     }
+    else{ //else: we are deleting rows in main table
+      if (selectedRows.includes(rowNNumber)) {
+        setSelectedRows(selectedRows.filter((NNumber) => NNumber !== rowNNumber));
+      } else {
+        setSelectedRows([...selectedRows, rowNNumber]);
+      }
+    }
+    
   }
+
+  const handleHeaderCheckboxChange = (event) => {
+    
+    if(isShowing){
+      if (event.target.checked) {
+        // If header checkbox is checked, select all rows
+        const allRowIds = deletedRows.map(row => row.NNumber);
+        setSelectDeletedRows(allRowIds);
+
+      } else {
+        // If header checkbox is unchecked, clear all selections
+        setSelectDeletedRows([]);
+
+      }
+    }else{
+      if (event.target.checked) {
+        const allRowIds = rows.map(row => row.NNumber);
+        setSelectedRows(allRowIds);
+      } else {
+        setSelectedRows([]);
+      }
+    }
+    
+  };
+
+  // Use useEffect to log the state after it updates
+useEffect(() => {
+  console.log("Selected Deleted Rows:", selectDeletedRows);
+}, [selectDeletedRows]);
 
 
   const deleteSelectedRows =  async () => {
@@ -272,7 +375,8 @@ function Table() {
     
   }
 
- 
+
+
   //Session change function
   const getStatus = (session) => {
     const sessionStr = String(session);
@@ -360,7 +464,7 @@ function Table() {
             )}
           </div>
           <button
-                className="btn btn-secondary"
+                className="btn btn-success"
                 style={{
                   marginRight: 10,
                   width: 143,
@@ -380,6 +484,7 @@ function Table() {
             </button>
         </div>
 
+        {/* Save Changes Info Window */}
         <div
           className="modal fade"
           id="SaveConfirm"
@@ -424,10 +529,22 @@ function Table() {
           </div>
         </div>
 
-        {/* Delete & Confirm function */}
+        {/* Delete/Recover & Confirm function */}
         <div className="selected-info">
-          <p>{selectedRows.length} rows selected</p>
-          <button
+          { isShowing ? <p>{selectDeletedRows.length} rows selected</p> 
+          :  <p>{selectedRows.length} rows selected</p> }
+         
+          { isShowing ? 
+            <button
+            className="btn btn-sm btn-warning"
+            data-bs-toggle="modal"
+            data-bs-target="#RecoverConfirm"
+            data-bs-backdrop="false"
+            style={{color: 'white'}}
+          >
+            Recover
+          </button>
+          : <button
             className="btn btn-sm btn-primary"
             data-bs-toggle="modal"
             data-bs-target="#exampleModal"
@@ -435,7 +552,11 @@ function Table() {
           >
             Delete
           </button>
+
+          }
         </div>
+
+        {/* Delete Rows Info Window */}
         <div
           className="modal fade"
           id="exampleModal"
@@ -480,6 +601,51 @@ function Table() {
           </div>
         </div>
 
+        {/* Recover Rows Info Window */}
+        <div
+          className="modal fade"
+          id="RecoverConfirm"
+          tabIndex="-1"
+          aria-labelledby="SaveConfirmLabel"
+          aria-hidden="true"
+        >
+          <div className="modal-dialog">
+            <div className="modal-content ">
+              <div className="modal-header">
+                <h1 className="modal-title fs-5" id="SaveConfirmLabel">
+                  Confirmation
+                </h1>
+                <button
+                  type="button"
+                  className="btn-close"
+                  data-bs-dismiss="modal"
+                  aria-label="Close"
+                ></button>
+              </div>
+              <div className="modal-body">
+                Are you sure you want to recover these rows?
+              </div>
+              <div className="modal-footer">
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  data-bs-dismiss="modal"
+                >
+                  Go Back
+                </button>
+                <button
+                  onClick={handleRecoverSaveClick}
+                  type="button"
+                  className="btn btn-primary"
+                  data-bs-dismiss="modal"
+                >
+                  Confirm
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
         
         {/* Table */}
        <div key={rows.length} className="table-responsive" style={{margin: '30px'}}> 
@@ -488,7 +654,7 @@ function Table() {
           <thead className="table-light">
             <tr>
               <th scope="col">
-                <input type="checkbox" id="headCheckbox"></input>
+                <input type="checkbox" id="headCheckbox"  disabled={isShowing} onClick={handleHeaderCheckboxChange}></input>
               </th>
               <th scope="col">
                 N Number
@@ -579,7 +745,9 @@ function Table() {
                   <input
                     type="checkbox"
                     className="row-checkbox"
-                    onClick={() => handleCheckboxChange(row.NNumber)}
+                    checked={selectedRows.includes(row.NNumber)}
+                    onChange={() => handleCheckboxChange(row.NNumber)}
+                    disabled={isShowing}
                   />
                 </th>
                 <td>{row.NNumber}</td>
@@ -632,15 +800,12 @@ function Table() {
                         {IsFinished(row[StatusName]) ? (
                           <div>
                             <div className="Green-glowing-dot"></div>
-                            {/* <FontAwesomeIcon icon={faCheck} style={{ color: 'green' , fontSize: '1.5em'}} /> */}
                             <div className="Green-text">Finished</div>
                             
                           </div>
                         ) : (
                           <div>
                             <div className="Red-glowing-dot"></div>
-                            {/* <FontAwesomeIcon icon={faTimes} style={{ color: 'red',fontSize: '1.5em' }} />
-                             */}
                             <div className="Red-text">Unfinished</div>
                           </div>
                         )}
@@ -654,9 +819,240 @@ function Table() {
         </table>
         
         </div> 
-      </div>
-    </>
-  );
+        
+        <div className="headerContainer">
+          <h2 style={{marginTop: '50px', marginLeft: '30px'}}> Recently Deleted</h2>
+          {/* Edit Mode & Save button*/}
+          <div className="editPositionController" >
+            {isShowing ? (
+              <button
+                className="btn btn-outline-secondary"
+                // data-bs-toggle="modal"
+                // data-bs-target="#RecoverConfirm"
+                data-bs-backdrop="true"
+                style={{
+                  marginRight: 10,
+                  width: 84,
+                  height: 40,
+                  display: "flex",
+                  paddingLeft: 20,
+                  alignItems: "center",
+                  fontSize: '20px',
+                  borderRadius: '20px',
+           
+                }}
+                type="button"
+                onClick={handleHideClick}
+              >
+                Hide
+              </button>
+            ) : (
+              <button
+                className="btn btn-outline-secondary"
+                style={{
+                  marginRight: 10,
+                  width: 95,
+                  height: 40,
+                  display: "flex",
+                  paddingLeft: 20,
+                  alignItems: "center",
+                  fontSize: '20px',
+                  borderRadius: '20px',
+                }}
+                onClick={handleShowClick}
+                type="button"
+              >
+                Show
+              </button>
+            )}
+          </div>
+        </div>
+
+
+        {/* Table for Recently Deleted Rows */}
+          {isShowing && (
+            <div className="table-responsive" style={{ margin: '30px' }}>
+            <table ref={deletedTableRef} className="table table-sm table-hover" style={{marginTop: '15px'}}>
+              <thead className="table-light">
+                <tr>
+                  <th scope="col">
+                    <input type="checkbox" id="headCheckbox2" onClick={handleHeaderCheckboxChange}></input>
+                  </th>
+                  <th scope="col">
+                    N Number
+                    <img
+                      src="https://cdn.icon-icons.com/icons2/906/PNG/512/sort_icon-icons.com_69899.png"
+                      alt="Logo"
+                      width="20"
+                    ></img>
+                  </th>
+                  <th scope="col">
+                    Name
+                    <img
+                      src="https://cdn.icon-icons.com/icons2/906/PNG/512/sort_icon-icons.com_69899.png"
+                      alt="Logo"
+                      width="20"
+                    ></img>
+                  </th>
+                  <th scope="col">
+                    Email
+                    <img
+                      src="https://cdn.icon-icons.com/icons2/906/PNG/512/sort_icon-icons.com_69899.png"
+                      alt="Logo"
+                      width="20"
+                    ></img>
+                  </th>
+                  <th scope="col">
+                    Session
+                    <img
+                      src="https://cdn.icon-icons.com/icons2/906/PNG/512/sort_icon-icons.com_69899.png"
+                      alt="Logo"
+                      width="20"
+                    ></img>
+                  </th>
+                  <th scope="col">
+                    Session Modality
+                    <img
+                      src="https://cdn.icon-icons.com/icons2/906/PNG/512/sort_icon-icons.com_69899.png"
+                      alt="Logo"
+                      width="20"
+                    ></img>
+                  </th>
+                  <th scope="col">
+                    Admission Status
+                    <img
+                      src="https://cdn.icon-icons.com/icons2/906/PNG/512/sort_icon-icons.com_69899.png"
+                      alt="Logo"
+                      width="20"
+                    ></img>
+                  </th>
+                  <th scope="col">
+                    Matriculation Status
+                    <img
+                      src="https://cdn.icon-icons.com/icons2/906/PNG/512/sort_icon-icons.com_69899.png"
+                      alt="Logo"
+                      width="20"
+                    ></img>
+                  </th>
+                  <th scope="col">
+                    Unity Status
+                    <img
+                      src="https://cdn.icon-icons.com/icons2/906/PNG/512/sort_icon-icons.com_69899.png"
+                      alt="Logo"
+                      width="20"
+                    ></img>
+                  </th>
+                  <th scope="col">
+                    Coursera Status
+                    <img
+                      src="https://cdn.icon-icons.com/icons2/906/PNG/512/sort_icon-icons.com_69899.png"
+                      alt="Logo"
+                      width="20"
+                    ></img>
+                  </th>
+                  <th scope="col">
+                    Survey Status
+                    <img
+                      src="https://cdn.icon-icons.com/icons2/906/PNG/512/sort_icon-icons.com_69899.png"
+                      alt="Logo"
+                      width="20"
+                    ></img>
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                { deletedRows.map((row) => (
+                  <tr key={row.NNumber}>
+                    <th scope="row">
+                      <input
+                        type="checkbox"
+                        className="row-checkbox"
+                        checked={selectDeletedRows.includes(row.NNumber)}
+                        onChange={() => handleCheckboxChange(row.NNumber)}
+                      />
+                    </th>
+                    <td>{row.NNumber}</td>
+                    <td>{row.Name}</td>
+                    <td>
+                      {isEditing ? (
+                        <input
+                          type="text"
+                          defaultValue={row.Email}
+                          onBlur={(e) => accumulateEmailChange(row.NNumber, e.target.value)}
+                        />
+                      ) : (
+                        row.Email
+                      )}
+                    </td>
+                    <td>
+                      {isEditing ? (
+                        <select
+                          value={row.Session}
+                          onChange={(e) =>
+                            accumulateStatusChange(row.NNumber, "Session", e.target.value)
+                          }
+                        >
+                          <option value="1">1</option>
+                          <option value="2">2</option>
+                          <option value="3">3</option>
+                        </select>
+                      ) : (
+                        row.Session
+                      )}
+                    </td>
+                    <td>{getStatus(row.Session)}</td>
+                    {StatusNames.map((StatusName, index) => (
+                      <td key={index}>
+                        {isEditing ? (
+                          <select
+                            value={row[StatusName]}
+                            onChange={(e) =>
+                              accumulateStatusChange(row.NNumber, StatusName, e.target.value)
+                            }
+                            style={{ color: row[StatusName] === "Finished" ? "#31b900" : "#ff0000", fontWeight: '600'}} 
+                          >
+                            {/* <option value=""></option> */}
+                            <option value="Unfinished" style={{color: 'red'}}>Unfinished</option>
+                            <option value="Finished">Finished</option>
+                          
+                          </select>
+                        ) : (
+                          <div>
+                            {IsFinished(row[StatusName]) ? (
+                              <div>
+                                <div className="Green-glowing-dot"></div>
+                                {/* <FontAwesomeIcon icon={faCheck} style={{ color: 'green' , fontSize: '1.5em'}} /> */}
+                                <div className="Green-text">Finished</div>
+                                
+                              </div>
+                            ) : (
+                              <div>
+                                <div className="Red-glowing-dot"></div>
+                                {/* <FontAwesomeIcon icon={faTimes} style={{ color: 'red',fontSize: '1.5em' }} />
+                                */}
+                                <div className="Red-text">Unfinished</div>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            </div>
+          )}
+
+
+    
+
+          
+    </div>
+
+</>
+
+);
 }
 
 export default Table;
