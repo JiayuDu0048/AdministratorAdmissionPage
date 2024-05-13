@@ -9,6 +9,7 @@ import CsvUpload from "./CSVupload";
 import { convertArrayOfObjectsToCSV, downloadCSV } from './CsvDownload';
 import axiosProvider from "../utils/axiosConfig";
 import io from 'socket.io-client';
+import { set } from "mongoose";
 
 const serverURL = import.meta.env.VITE_SERVER_URL;
 // Establish a connection to the WebSocket server
@@ -55,21 +56,46 @@ function Table() {
 
   };
 
-  //Show Mode function
+  // Show/Hide Mode function
   function handleShowClick() {
     setIsEditing(false);
     setIsShowing(true);
     setSelectedRows([]);
-    //TODO: uncheck selected rows
   }
   function handleHideClick() {
     setIsShowing(false);
     setSelectDeletedRows([]);
-    //TODO: uncheck select deleted rows
   }
-  const handleRecoverSaveClick = async() => {
-    setIsShowing(false);
-  }
+  const handleRecoverSaveClick = async () => {
+    if (selectDeletedRows.length === 0) {
+        alert("No rows selected for recovery.");
+        return;
+    }
+
+    try {
+        const response = await axiosProvider.post('/api/recover', {
+            NNumbers: selectDeletedRows
+        });
+
+        if (response.status === 200) {
+            
+            const recoveredRows = deletedRows.filter(row => selectDeletedRows.includes(row.NNumber));
+            setRows([...rows, ...recoveredRows]);
+            setDeletedRows(deletedRows.filter(row => !selectDeletedRows.includes(row.NNumber)));
+            setSelectDeletedRows([]); // Clear the selection
+            console.log("Rows recovered successfully.");
+            setIsShowing(false);
+
+        } else {
+            throw new Error('Failed to recover rows');
+        }
+    } catch (error) {
+        console.error("Failed to save changes", error.message);
+    }
+  };
+
+
+
 
   //Edit Mode function
   function handleEditClick() {
@@ -193,7 +219,7 @@ function Table() {
           setRows(filteredData);
 
           const deletedData  = response.data
-          .filter(row => row.deleted) // Exclude deleted records
+          .filter(row => row.deleted) 
           .map(({ deleted, deletedAt, addedAt,  __v, _id, ...keepAttrs }) => ({
             ...keepAttrs, 
             AdmissionStatus: keepAttrs.AdmissionStatus ? 'Finished' : 'Unfinished',
@@ -206,24 +232,20 @@ function Table() {
 
       } catch (error) {
         console.error('Error fetching data:', error);
-      }
-      
-    
+      }   
     };
   
     fetchData();
   }, []);
   
 
+  // UseEffect for Main Table
   useEffect(() => {
     
     const $dataTable = $(tableRef.current);
-    // console.log("Rows data before DataTable operation:", rows);
 
     if (!$.fn.dataTable.isDataTable($dataTable)) {
       // Initialize DataTables only if it hasn't been initialized
-
-      // console.log("Initializing DataTable with data:", rows);
       $dataTable.DataTable({
         responsive: true,
         autoWidth: false,
@@ -231,20 +253,11 @@ function Table() {
       });
       
     } else {
-      // DataTables is already initialized, so we manually manage updates
-      // to avoid destroying and reinitializing it.
-
-      // console.log("Updating DataTable with new data:", rows);
-      let dataTableInstance = $dataTable.DataTable();
-
-      // Temporarily disable state saving to avoid saving state during data update
-      dataTableInstance.state.clear();
-
-      // Perform necessary data updates here. 
-      dataTableInstance.rows.add(rows).draw();
-
-      // Re-enable state saving after updates: this must work together with stateSave: true
-      dataTableInstance.state.save();
+      // DataTables is already initialized, so we manually manage updates to avoid destroying and reinitializing it.
+      let dataTableInstance = $dataTable.DataTable();  
+      dataTableInstance.state.clear();          // Temporarily disable state saving to avoid saving state during data update   
+      dataTableInstance.rows.add(rows).draw();      // Perform necessary data updates here. 
+      dataTableInstance.state.save();        // Re-enable state saving after updates: this must work together with stateSave: true
     }
 
     // Cleanup function to destroy the DataTable instance on component unmount (Don't delete this!)
@@ -257,37 +270,46 @@ function Table() {
   }, [rows]); // Only re-run when `rows` changes
 
 
+
+  // UseEffect for Deleted Table
   useEffect(() => {
-    // Initialize deleted rows DataTable
-    if (isShowing) {
-      const $deletedTable = $(deletedTableRef.current);
-      if (!$.fn.dataTable.isDataTable($deletedTable)) {
-        $deletedTable.DataTable({
-          responsive: true,
-          autoWidth: false,
-          stateSave: true,
-          searching: true,
-          paging: true,
-          info: true
-        });
-      } else {
-        let dataTableInstance = $deletedTable.DataTable();
-        dataTableInstance.state.clear();
-        dataTableInstance.rows.add(deletedRows).draw();
-        dataTableInstance.state.save();
-      }
+  const $deletedTable = $(deletedTableRef.current);
 
-      return () => {
-        if ($.fn.dataTable.isDataTable($deletedTable)) {
-          $deletedTable.DataTable().destroy();
-        }
-      };
+  console.log("Table HTML before DataTables initialization:", $deletedTable.html());
+
+  const initializeDataTables = () => {
+    const numHeaders = $deletedTable.find("thead th").length;
+    const numBodyCells = $deletedTable.find("tbody tr:first td").length;
+
+    console.log(`Header count: ${numHeaders}, Body cell count: ${numBodyCells}`);
+
+    if (numHeaders === numBodyCells) {
+      $deletedTable.DataTable({
+        responsive: true,
+        autoWidth: false,
+        destroy: true,
+      });
+      console.log("DataTables initialized successfully.");
+    } else {
+      console.error("Table structure mismatch: Headers vs. Body");
     }
-  }, [deletedRows, isShowing]);
+  };
+
+  if (!$.fn.dataTable.isDataTable($deletedTable) && deletedRows.length > 0) {
+    console.log("Initializing DataTables with data:", deletedRows);
+    setTimeout(initializeDataTables, 100);
+  }
+
+  return () => {
+    if ($.fn.dataTable.isDataTable($deletedTable)) {
+      console.log("Destroying DataTables instance.");
+      $deletedTable.DataTable().destroy();
+    }
+  };
+}, [deletedRows, isShowing]); // Dependency on deletedRows and isShowing
 
   
 
-  
 
   // Multiple choice and delete function
   function handleCheckboxChange(rowNNumber) { 
@@ -334,15 +356,12 @@ function Table() {
     
   };
 
-  // Use useEffect to log the state after it updates
-useEffect(() => {
-  console.log("Selected Deleted Rows:", selectDeletedRows);
-}, [selectDeletedRows]);
-
 
   const deleteSelectedRows =  async () => {
     const updatedRows = rows.filter((row) => !selectedRows.includes(row.NNumber));
+    const rowsToDelete = rows.filter(row => selectedRows.includes(row.NNumber));
     setRows(updatedRows);
+    setDeletedRows([...deletedRows, ...rowsToDelete]);
     
     //Call backend deletion router
     try{
@@ -362,6 +381,7 @@ useEffect(() => {
             }
             return row;
           });
+
           socket.emit('request session update');
           socket.emit('request status update');
           
@@ -529,7 +549,7 @@ useEffect(() => {
           </div>
         </div>
 
-        {/* Delete/Recover & Confirm function */}
+        {/* Lower right card */}
         <div className="selected-info">
           { isShowing ? <p>{selectDeletedRows.length} rows selected</p> 
           :  <p>{selectedRows.length} rows selected</p> }
@@ -647,7 +667,7 @@ useEffect(() => {
         </div>
 
         
-        {/* Table */}
+        {/* Main Table */}
        <div key={rows.length} className="table-responsive" style={{margin: '30px'}}> 
          {/* React feature: force re-render the table everytime the key is changed */}
         <table ref={tableRef} className="table table-sm table-hover" style={{marginTop: '15px'}}>
@@ -822,7 +842,7 @@ useEffect(() => {
         
         <div className="headerContainer">
           <h2 style={{marginTop: '50px', marginLeft: '30px'}}> Recently Deleted</h2>
-          {/* Edit Mode & Save button*/}
+          {/* Show & Hide button*/}
           <div className="editPositionController" >
             {isShowing ? (
               <button
@@ -832,7 +852,7 @@ useEffect(() => {
                 data-bs-backdrop="true"
                 style={{
                   marginRight: 10,
-                  width: 84,
+                  width: 86,
                   height: 40,
                   display: "flex",
                   paddingLeft: 20,
@@ -851,7 +871,7 @@ useEffect(() => {
                 className="btn btn-outline-secondary"
                 style={{
                   marginRight: 10,
-                  width: 95,
+                  width: 98,
                   height: 40,
                   display: "flex",
                   paddingLeft: 20,
@@ -963,76 +983,30 @@ useEffect(() => {
               <tbody>
                 { deletedRows.map((row) => (
                   <tr key={row.NNumber}>
-                    <th scope="row">
+                    <td >
                       <input
                         type="checkbox"
                         className="row-checkbox"
                         checked={selectDeletedRows.includes(row.NNumber)}
                         onChange={() => handleCheckboxChange(row.NNumber)}
                       />
-                    </th>
+                    </td>
                     <td>{row.NNumber}</td>
                     <td>{row.Name}</td>
-                    <td>
-                      {isEditing ? (
-                        <input
-                          type="text"
-                          defaultValue={row.Email}
-                          onBlur={(e) => accumulateEmailChange(row.NNumber, e.target.value)}
-                        />
-                      ) : (
-                        row.Email
-                      )}
-                    </td>
-                    <td>
-                      {isEditing ? (
-                        <select
-                          value={row.Session}
-                          onChange={(e) =>
-                            accumulateStatusChange(row.NNumber, "Session", e.target.value)
-                          }
-                        >
-                          <option value="1">1</option>
-                          <option value="2">2</option>
-                          <option value="3">3</option>
-                        </select>
-                      ) : (
-                        row.Session
-                      )}
-                    </td>
-                    <td>{getStatus(row.Session)}</td>
-                    {StatusNames.map((StatusName, index) => (
-                      <td key={index}>
-                        {isEditing ? (
-                          <select
-                            value={row[StatusName]}
-                            onChange={(e) =>
-                              accumulateStatusChange(row.NNumber, StatusName, e.target.value)
-                            }
-                            style={{ color: row[StatusName] === "Finished" ? "#31b900" : "#ff0000", fontWeight: '600'}} 
-                          >
-                            {/* <option value=""></option> */}
-                            <option value="Unfinished" style={{color: 'red'}}>Unfinished</option>
-                            <option value="Finished">Finished</option>
-                          
-                          </select>
+                    <td>{row.Email}</td>
+                    <td>{row.Session}</td>
+                    <td>{row.SessionModality}</td>
+                    {['AdmissionStatus', 'MatriculationStatus', 'UnityStatus', 'CourseraStatus', 'SurveyStatus'].map(status => (
+                      <td key={status}>
+                        {row[status] === "Finished" ? (
+                          <div>
+                            <div className="Green-glowing-dot"></div>
+                            <span className="Green-text">Finished</span>
+                          </div>
                         ) : (
                           <div>
-                            {IsFinished(row[StatusName]) ? (
-                              <div>
-                                <div className="Green-glowing-dot"></div>
-                                {/* <FontAwesomeIcon icon={faCheck} style={{ color: 'green' , fontSize: '1.5em'}} /> */}
-                                <div className="Green-text">Finished</div>
-                                
-                              </div>
-                            ) : (
-                              <div>
-                                <div className="Red-glowing-dot"></div>
-                                {/* <FontAwesomeIcon icon={faTimes} style={{ color: 'red',fontSize: '1.5em' }} />
-                                */}
-                                <div className="Red-text">Unfinished</div>
-                              </div>
-                            )}
+                            <div className="Red-glowing-dot"></div>
+                            <span className="Red-text">Unfinished</span>
                           </div>
                         )}
                       </td>

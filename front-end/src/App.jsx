@@ -10,6 +10,7 @@ import Dashboard from "./Component/charts/DashboardScreen";
 import BaseLayout from "./layouts/BaseLayout";
 import Footer from "./Component/Footer";
 import GothamMedium from '../assets/Gotham-Medium.otf'
+import ErrorBoundary from "./Component/errorBoundary";
 
 
 function App() {
@@ -41,7 +42,7 @@ function TablePage() {
     <>
       <NavbarLogout />
       <Dashboard />
-      <Table />
+      <ErrorBoundary><Table /></ErrorBoundary>
       <Footer />
     </>
   );
