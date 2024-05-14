@@ -300,7 +300,7 @@ button, .btn{
 .chatbox-message {
   display: flex;
   margin-bottom: 10px;
-  font-size: 20px;
+  font-size: 18px;
   align-items: center; /* Center-align icons and messages vertically */
 }
 

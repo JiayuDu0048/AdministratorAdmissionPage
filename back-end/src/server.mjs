@@ -1,8 +1,12 @@
 #!/usr/bin/env node
-import { server } from "./app.mjs"
+import { server } from "./app.mjs";
 
 // which port to listen for HTTP(S) requests
 const PORT = process.env.SERVER_PORT
+
+
+// Print the OpenAI API key to verify it's loaded
+console.log('OPENAI_API_KEY:', process.env.API_KEY);
 
 // call a function to start listening to the port
 const listener = server.listen(PORT, () => {
