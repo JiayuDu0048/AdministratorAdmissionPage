@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import $ from "jquery";
 import "datatables.net";
 import "datatables.net-bs5";
@@ -9,8 +10,7 @@ import CsvUpload from "./CSVupload";
 import { convertArrayOfObjectsToCSV, downloadCSV } from './CsvDownload';
 import axiosProvider from "../utils/axiosConfig";
 import io from 'socket.io-client';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCheck, faTimes } from '@fortawesome/free-solid-svg-icons';
+
 
 const serverURL = import.meta.env.VITE_SERVER_URL;
 // Establish a connection to the WebSocket server
@@ -20,10 +20,17 @@ const socket = io(serverURL, {
 
 function Table() {
   const startingIndex = 5;
+  const navigate = useNavigate();
   const [rows, setRows] = useState([]);
   const StatusNames = rows[0] ? Object.keys(rows[0]).slice(startingIndex) : [];
+  const [deletedRows, setDeletedRows] = useState([]);
   const [pendingChanges, setPendingChanges] = useState({ emailUpdates: {}, statusUpdates: {} });
+  const [isEditing, setIsEditing] = useState(false);
+  const [isShowing, setIsShowing] = useState(false);
+  const [selectedRows, setSelectedRows] = useState([]);
+  const [selectDeletedRows, setSelectDeletedRows] = useState([]);
 
+  
   //Save pending changes function
   //Only save email changes
   const accumulateEmailChange = (NNumber, newEmail) => {
@@ -51,8 +58,48 @@ function Table() {
 
   };
 
+  // Show/Hide Mode function
+  function handleShowClick() {
+    setIsEditing(false);
+    setIsShowing(true);
+    setSelectedRows([]);
+  }
+  function handleHideClick() {
+    setIsShowing(false);
+    setSelectDeletedRows([]);
+  }
+  const handleRecoverSaveClick = async () => {
+    if (selectDeletedRows.length === 0) {
+        alert("No rows selected for recovery.");
+        return;
+    }
+
+    try {
+        const response = await axiosProvider.post('/api/recover', {
+            NNumbers: selectDeletedRows
+        });
+
+        if (response.status === 200) {
+            
+            const recoveredRows = deletedRows.filter(row => selectDeletedRows.includes(row.NNumber));
+            setRows([...rows, ...recoveredRows]);
+            setDeletedRows(deletedRows.filter(row => !selectDeletedRows.includes(row.NNumber)));
+            setSelectDeletedRows([]); // Clear the selection
+            console.log("Rows recovered successfully.");
+            setIsShowing(false);
+
+        } else {
+            throw new Error('Failed to recover rows');
+        }
+    } catch (error) {
+        console.error("Failed to save changes", error.message);
+    }
+  };
+
+
+
+
   //Edit Mode function
-  const [isEditing, setIsEditing] = useState(false);
   function handleEditClick() {
     setIsEditing(true);
   }
@@ -151,6 +198,7 @@ function Table() {
   
   //Load the table using datatable and reload when the rows changed
   const tableRef = useRef(null);
+  const deletedTableRef = useRef(null);
   useEffect(() => {
     const fetchData = async () => {
     
@@ -171,48 +219,47 @@ function Table() {
         
           // console.log("Filtered data:", filteredData);
           setRows(filteredData);
+
+          const deletedData  = response.data
+          .filter(row => row.deleted) 
+          .map(({ deleted, deletedAt, addedAt,  __v, _id, ...keepAttrs }) => ({
+            ...keepAttrs, 
+            AdmissionStatus: keepAttrs.AdmissionStatus ? 'Finished' : 'Unfinished',
+            MatriculationStatus: keepAttrs.MatriculationStatus ? 'Finished' : 'Unfinished',
+            UnityStatus: keepAttrs.UnityStatus ? 'Finished' : 'Unfinished',
+            CourseraStatus: keepAttrs.CourseraStatus ? 'Finished' : 'Unfinished',
+            SurveyStatus: keepAttrs.SurveyStatus ? 'Finished' : 'Unfinished',
+          }));
+          setDeletedRows(deletedData);
+
       } catch (error) {
         console.error('Error fetching data:', error);
-      }
-      
-    
+      }   
     };
   
     fetchData();
   }, []);
   
 
+  // UseEffect for Main Table
   useEffect(() => {
     
     const $dataTable = $(tableRef.current);
-    // console.log("Rows data before DataTable operation:", rows);
 
     if (!$.fn.dataTable.isDataTable($dataTable)) {
       // Initialize DataTables only if it hasn't been initialized
-
-      // console.log("Initializing DataTable with data:", rows);
       $dataTable.DataTable({
         responsive: true,
         autoWidth: false,
         stateSave: true, // Enable state saving to remember the table's state
-        
       });
       
     } else {
-      // DataTables is already initialized, so we manually manage updates
-      // to avoid destroying and reinitializing it.
-
-      // console.log("Updating DataTable with new data:", rows);
-      let dataTableInstance = $dataTable.DataTable();
-
-      // Temporarily disable state saving to avoid saving state during data update
-      dataTableInstance.state.clear();
-
-      // Perform necessary data updates here. 
-      dataTableInstance.rows.add(rows).draw();
-
-      // Re-enable state saving after updates: this must work together with stateSave: true
-      dataTableInstance.state.save();
+      // DataTables is already initialized, so we manually manage updates to avoid destroying and reinitializing it.
+      let dataTableInstance = $dataTable.DataTable();  
+      dataTableInstance.state.clear();          // Temporarily disable state saving to avoid saving state during data update   
+      dataTableInstance.rows.add(rows).draw();      // Perform necessary data updates here. 
+      dataTableInstance.state.save();        // Re-enable state saving after updates: this must work together with stateSave: true
     }
 
     // Cleanup function to destroy the DataTable instance on component unmount (Don't delete this!)
@@ -224,22 +271,99 @@ function Table() {
     };
   }, [rows]); // Only re-run when `rows` changes
 
+
+
+  // UseEffect for Deleted Table
+  useEffect(() => {
+  const $deletedTable = $(deletedTableRef.current);
+
+  console.log("Table HTML before DataTables initialization:", $deletedTable.html());
+
+  const initializeDataTables = () => {
+    const numHeaders = $deletedTable.find("thead th").length;
+    const numBodyCells = $deletedTable.find("tbody tr:first td").length;
+
+    console.log(`Header count: ${numHeaders}, Body cell count: ${numBodyCells}`);
+
+    if (numHeaders === numBodyCells) {
+      $deletedTable.DataTable({
+        responsive: true,
+        autoWidth: false,
+        destroy: true,
+      });
+      console.log("DataTables initialized successfully.");
+    } else {
+      console.error("Table structure mismatch: Headers vs. Body");
+    }
+  };
+
+  if (!$.fn.dataTable.isDataTable($deletedTable) && deletedRows.length > 0) {
+    console.log("Initializing DataTables with data:", deletedRows);
+    setTimeout(initializeDataTables, 100);
+  }
+
+  return () => {
+    if ($.fn.dataTable.isDataTable($deletedTable)) {
+      console.log("Destroying DataTables instance.");
+      $deletedTable.DataTable().destroy();
+    }
+  };
+}, [deletedRows, isShowing]); // Dependency on deletedRows and isShowing
+
   
 
-  //Multiple choice and delete function
-  const [selectedRows, setSelectedRows] = useState([]);
-  function handleCheckboxChange(rowNNumber) {
-    if (selectedRows.includes(rowNNumber)) {
-      setSelectedRows(selectedRows.filter((NNumber) => NNumber !== rowNNumber));
-    } else {
-      setSelectedRows([...selectedRows, rowNNumber]);
+
+  // Multiple choice and delete function
+  function handleCheckboxChange(rowNNumber) { 
+     
+    if(isShowing){
+          //Recover rows in deleted table
+      if (selectDeletedRows.includes(rowNNumber)) {
+        setSelectDeletedRows(selectDeletedRows.filter((NNumber) => NNumber !== rowNNumber));
+      } else {
+        setSelectDeletedRows([...selectDeletedRows, rowNNumber]);
+      }
     }
+    else{ //else: we are deleting rows in main table
+      if (selectedRows.includes(rowNNumber)) {
+        setSelectedRows(selectedRows.filter((NNumber) => NNumber !== rowNNumber));
+      } else {
+        setSelectedRows([...selectedRows, rowNNumber]);
+      }
+    }
+    
   }
+
+  const handleHeaderCheckboxChange = (event) => {
+    
+    if(isShowing){
+      if (event.target.checked) {
+        // If header checkbox is checked, select all rows
+        const allRowIds = deletedRows.map(row => row.NNumber);
+        setSelectDeletedRows(allRowIds);
+
+      } else {
+        // If header checkbox is unchecked, clear all selections
+        setSelectDeletedRows([]);
+
+      }
+    }else{
+      if (event.target.checked) {
+        const allRowIds = rows.map(row => row.NNumber);
+        setSelectedRows(allRowIds);
+      } else {
+        setSelectedRows([]);
+      }
+    }
+    
+  };
 
 
   const deleteSelectedRows =  async () => {
     const updatedRows = rows.filter((row) => !selectedRows.includes(row.NNumber));
+    const rowsToDelete = rows.filter(row => selectedRows.includes(row.NNumber));
     setRows(updatedRows);
+    setDeletedRows([...deletedRows, ...rowsToDelete]);
     
     //Call backend deletion router
     try{
@@ -259,6 +383,7 @@ function Table() {
             }
             return row;
           });
+
           socket.emit('request session update');
           socket.emit('request status update');
           
@@ -272,7 +397,12 @@ function Table() {
     
   }
 
- 
+  const handleHelpClick = () => {
+    navigate("/help"); // Navigate to the Help page
+  };
+
+
+
   //Session change function
   const getStatus = (session) => {
     const sessionStr = String(session);
@@ -360,7 +490,7 @@ function Table() {
             )}
           </div>
           <button
-                className="btn btn-secondary"
+                className="btn btn-success"
                 style={{
                   marginRight: 10,
                   width: 143,
@@ -380,6 +510,7 @@ function Table() {
             </button>
         </div>
 
+        {/* Save Changes Info Window */}
         <div
           className="modal fade"
           id="SaveConfirm"
@@ -424,10 +555,22 @@ function Table() {
           </div>
         </div>
 
-        {/* Delete & Confirm function */}
+        {/* Lower right card */}
         <div className="selected-info">
-          <p>{selectedRows.length} rows selected</p>
-          <button
+          { isShowing ? <p>{selectDeletedRows.length} rows selected</p> 
+          :  <p>{selectedRows.length} rows selected</p> }
+         
+          { isShowing ? 
+            <button
+            className="btn btn-sm btn-warning"
+            data-bs-toggle="modal"
+            data-bs-target="#RecoverConfirm"
+            data-bs-backdrop="false"
+            style={{color: 'white'}}
+          >
+            Recover
+          </button>
+          : <button
             className="btn btn-sm btn-primary"
             data-bs-toggle="modal"
             data-bs-target="#exampleModal"
@@ -435,7 +578,11 @@ function Table() {
           >
             Delete
           </button>
+
+          }
         </div>
+
+        {/* Delete Rows Info Window */}
         <div
           className="modal fade"
           id="exampleModal"
@@ -480,15 +627,60 @@ function Table() {
           </div>
         </div>
 
+        {/* Recover Rows Info Window */}
+        <div
+          className="modal fade"
+          id="RecoverConfirm"
+          tabIndex="-1"
+          aria-labelledby="SaveConfirmLabel"
+          aria-hidden="true"
+        >
+          <div className="modal-dialog">
+            <div className="modal-content ">
+              <div className="modal-header">
+                <h1 className="modal-title fs-5" id="SaveConfirmLabel">
+                  Confirmation
+                </h1>
+                <button
+                  type="button"
+                  className="btn-close"
+                  data-bs-dismiss="modal"
+                  aria-label="Close"
+                ></button>
+              </div>
+              <div className="modal-body">
+                Are you sure you want to recover these rows?
+              </div>
+              <div className="modal-footer">
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  data-bs-dismiss="modal"
+                >
+                  Go Back
+                </button>
+                <button
+                  onClick={handleRecoverSaveClick}
+                  type="button"
+                  className="btn btn-primary"
+                  data-bs-dismiss="modal"
+                >
+                  Confirm
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
         
-        {/* Table */}
+        {/* Main Table */}
        <div key={rows.length} className="table-responsive" style={{margin: '30px'}}> 
          {/* React feature: force re-render the table everytime the key is changed */}
         <table ref={tableRef} className="table table-sm table-hover" style={{marginTop: '15px'}}>
           <thead className="table-light">
             <tr>
               <th scope="col">
-                <input type="checkbox" id="headCheckbox"></input>
+                <input type="checkbox" id="headCheckbox"  disabled={isShowing} onClick={handleHeaderCheckboxChange}></input>
               </th>
               <th scope="col">
                 N Number
@@ -579,7 +771,9 @@ function Table() {
                   <input
                     type="checkbox"
                     className="row-checkbox"
-                    onClick={() => handleCheckboxChange(row.NNumber)}
+                    checked={selectedRows.includes(row.NNumber)}
+                    onChange={() => handleCheckboxChange(row.NNumber)}
+                    disabled={isShowing}
                   />
                 </th>
                 <td>{row.NNumber}</td>
@@ -632,15 +826,12 @@ function Table() {
                         {IsFinished(row[StatusName]) ? (
                           <div>
                             <div className="Green-glowing-dot"></div>
-                            {/* <FontAwesomeIcon icon={faCheck} style={{ color: 'green' , fontSize: '1.5em'}} /> */}
                             <div className="Green-text">Finished</div>
                             
                           </div>
                         ) : (
                           <div>
                             <div className="Red-glowing-dot"></div>
-                            {/* <FontAwesomeIcon icon={faTimes} style={{ color: 'red',fontSize: '1.5em' }} />
-                             */}
                             <div className="Red-text">Unfinished</div>
                           </div>
                         )}
@@ -654,9 +845,219 @@ function Table() {
         </table>
         
         </div> 
-      </div>
-    </>
-  );
+        
+        <div className="headerContainer">
+          <h2 style={{marginTop: '50px', marginLeft: '30px'}}> Recently Deleted</h2>
+          {/* Show & Hide button*/}
+          <div className="editPositionController" >
+            {isShowing ? (
+              <button
+                className="btn btn-outline-secondary"
+                // data-bs-toggle="modal"
+                // data-bs-target="#RecoverConfirm"
+                data-bs-backdrop="true"
+                style={{
+                  marginRight: 10,
+                  width: 86,
+                  height: 40,
+                  display: "flex",
+                  paddingLeft: 20,
+                  alignItems: "center",
+                  fontSize: '20px',
+                  borderRadius: '20px',
+           
+                }}
+                type="button"
+                onClick={handleHideClick}
+              >
+                Hide
+              </button>
+            ) : (
+              <button
+                className="btn btn-outline-secondary"
+                style={{
+                  marginRight: 10,
+                  width: 98,
+                  height: 40,
+                  display: "flex",
+                  paddingLeft: 20,
+                  alignItems: "center",
+                  fontSize: '20px',
+                  borderRadius: '20px',
+                }}
+                onClick={handleShowClick}
+                type="button"
+              >
+                Show
+              </button>
+            )}
+          </div>
+        </div>
+
+
+        {/* Table for Recently Deleted Rows */}
+        {isShowing && (
+            <div className="table-responsive" style={{ margin: '30px' }}>
+            <table ref={deletedTableRef} className="table table-sm table-hover" style={{marginTop: '15px'}}>
+              <thead className="table-light">
+                <tr>
+                  <th scope="col">
+                    <input type="checkbox" id="headCheckbox2" onClick={handleHeaderCheckboxChange}></input>
+                  </th>
+                  <th scope="col">
+                    N Number
+                    <img
+                      src="https://cdn.icon-icons.com/icons2/906/PNG/512/sort_icon-icons.com_69899.png"
+                      alt="Logo"
+                      width="20"
+                    ></img>
+                  </th>
+                  <th scope="col">
+                    Name
+                    <img
+                      src="https://cdn.icon-icons.com/icons2/906/PNG/512/sort_icon-icons.com_69899.png"
+                      alt="Logo"
+                      width="20"
+                    ></img>
+                  </th>
+                  <th scope="col">
+                    Email
+                    <img
+                      src="https://cdn.icon-icons.com/icons2/906/PNG/512/sort_icon-icons.com_69899.png"
+                      alt="Logo"
+                      width="20"
+                    ></img>
+                  </th>
+                  <th scope="col">
+                    Session
+                    <img
+                      src="https://cdn.icon-icons.com/icons2/906/PNG/512/sort_icon-icons.com_69899.png"
+                      alt="Logo"
+                      width="20"
+                    ></img>
+                  </th>
+                  <th scope="col">
+                    Session Modality
+                    <img
+                      src="https://cdn.icon-icons.com/icons2/906/PNG/512/sort_icon-icons.com_69899.png"
+                      alt="Logo"
+                      width="20"
+                    ></img>
+                  </th>
+                  <th scope="col">
+                    Admission Status
+                    <img
+                      src="https://cdn.icon-icons.com/icons2/906/PNG/512/sort_icon-icons.com_69899.png"
+                      alt="Logo"
+                      width="20"
+                    ></img>
+                  </th>
+                  <th scope="col">
+                    Matriculation Status
+                    <img
+                      src="https://cdn.icon-icons.com/icons2/906/PNG/512/sort_icon-icons.com_69899.png"
+                      alt="Logo"
+                      width="20"
+                    ></img>
+                  </th>
+                  <th scope="col">
+                    Unity Status
+                    <img
+                      src="https://cdn.icon-icons.com/icons2/906/PNG/512/sort_icon-icons.com_69899.png"
+                      alt="Logo"
+                      width="20"
+                    ></img>
+                  </th>
+                  <th scope="col">
+                    Coursera Status
+                    <img
+                      src="https://cdn.icon-icons.com/icons2/906/PNG/512/sort_icon-icons.com_69899.png"
+                      alt="Logo"
+                      width="20"
+                    ></img>
+                  </th>
+                  <th scope="col">
+                    Survey Status
+                    <img
+                      src="https://cdn.icon-icons.com/icons2/906/PNG/512/sort_icon-icons.com_69899.png"
+                      alt="Logo"
+                      width="20"
+                    ></img>
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                { deletedRows.map((row) => (
+                  <tr key={row.NNumber}>
+                    <td >
+                      <input
+                        type="checkbox"
+                        className="row-checkbox"
+                        checked={selectDeletedRows.includes(row.NNumber)}
+                        onChange={() => handleCheckboxChange(row.NNumber)}
+                      />
+                    </td>
+                    <td>{row.NNumber}</td>
+                    <td>{row.Name}</td>
+                    <td>{row.Email}</td>
+                    <td>{row.Session}</td>
+                    <td>{row.SessionModality}</td>
+                    {['AdmissionStatus', 'MatriculationStatus', 'UnityStatus', 'CourseraStatus', 'SurveyStatus'].map(status => (
+                      <td key={status}>
+                        {row[status] === "Finished" ? (
+                          <div>
+                            <div className="Green-glowing-dot"></div>
+                            <span className="Green-text">Finished</span>
+                          </div>
+                        ) : (
+                          <div>
+                            <div className="Red-glowing-dot"></div>
+                            <span className="Red-text">Unfinished</span>
+                          </div>
+                        )}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            </div>
+          )}
+
+          {/* Need Help Link */}
+          <div className="headerContainer" style={{marginBottom: '30px'}}>
+          <h2 style={{marginTop: '50px', marginLeft: '30px'}}> Still Need Help?</h2>
+          {/* Help button*/}
+          <div className="editPositionController" >
+              <button
+                className="btn btn-outline-secondary"
+                // data-bs-toggle="modal"
+                // data-bs-target="#RecoverConfirm"
+                data-bs-backdrop="true"
+                style={{
+                  marginRight: 10,
+                  width: 88,
+                  height: 40,
+                  display: "flex",
+                  paddingLeft: 20,
+                  alignItems: "center",
+                  fontSize: '20px',
+                  borderRadius: '20px',
+           
+                }}
+                type="button"
+                onClick={handleHelpClick}
+              >
+                Help
+              </button>
+          </div>
+        </div>
+          
+    </div>
+
+</>
+
+);
 }
 
 export default Table;

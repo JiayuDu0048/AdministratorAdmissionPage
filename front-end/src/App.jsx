@@ -8,7 +8,9 @@ import Table from "./Component/Table";
 import LoginPage from "./Component/LoginPage";
 import Dashboard from "./Component/charts/DashboardScreen";
 import BaseLayout from "./layouts/BaseLayout";
-import GothamMedium from '../assets/Gotham-Medium.otf'
+import Footer from "./Component/Footer";
+import ErrorBoundary from "./Component/errorBoundary";
+import AIChatBox from "./Component/AIChatBox";
 
 
 function App() {
@@ -18,6 +20,7 @@ function App() {
         <Routes element={<BaseLayout />}>
           <Route path="/" element={<HomePage />} />
           <Route path="/table" element={<TablePage />} />
+          <Route path="/help" element={<HelpPage />} />
         </Routes>
       </div>
     </Router>
@@ -40,8 +43,19 @@ function TablePage() {
     <>
       <NavbarLogout />
       <Dashboard />
-      <Table />
+      <ErrorBoundary><Table /></ErrorBoundary>
+      <Footer />
     </>
+  );
+}
+
+function HelpPage(){
+  return (
+    <>
+    <NavbarLogout />
+    <AIChatBox />
+    <Footer />
+  </>
   );
 }
 

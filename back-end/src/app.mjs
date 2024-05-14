@@ -1,11 +1,13 @@
+import dotenv from 'dotenv';
+import "dotenv/config";
+
 import express from 'express';
 import http from 'http';
 import { Server as SocketIO } from 'socket.io';
 import url from 'url';
 import path from 'path';
 import cors from 'cors';
-import dotenv from 'dotenv';
-import "dotenv/config";
+
 import morgan from 'morgan';
 import mongoose from 'mongoose';  
 import populateDataRouter from './routes/populateDataRouter.mjs';
@@ -15,6 +17,10 @@ import getStudentRouter from './routes/getStudentRouter.mjs';
 import loginRouter from './routes/loginRouter.mjs';
 import fetchAllStudentsRouter from './routes/fetchAllStudentsRouter.mjs'
 import sessionStatsRouter from './routes/statsRouter.mjs';
+import recoverRowsRouter from './routes/recoverRowsRouter.mjs';
+import chatBoxRouter from './routes/chatBoxRouter.mjs';
+
+
 
 const app = express();
 const server = http.createServer(app);
@@ -25,6 +31,16 @@ const io = new SocketIO(server, {
   },
   path: '/socket.io' 
 });
+
+
+// serve static files
+const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
+app.use("/static", express.static(path.join(__dirname, 'public')));
+dotenv.config({ path: path.resolve(__dirname, '../.env') });
+
+// Print the OpenAI API key to verify it's loaded
+console.log('API key from dotenv in app.mjs:', process.env.API_KEY);
+
 
 // WebSocket setup
 io.on('connection', (socket) => {
@@ -45,10 +61,7 @@ app.use(morgan("dev")); // morgan: log all incoming http requests
 app.use(express.json()); // decode JSON-formatted incoming POST data
 app.use(express.urlencoded({ extended: true })); // decode url-encoded incoming POST data
 
-// serve static files
-const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
-app.use("/static", express.static(path.join(__dirname, 'public')));
-dotenv.config({ path: path.resolve(__dirname, '../.env') });
+
 
 // cors
 const corsOptions = {
@@ -71,6 +84,8 @@ mongoose.connect(process.env.MONGODB_URI, { useNewUrlParser: true, useUnifiedTop
 app.use('/api', updateRouter);
 app.use('/api', getStudentRouter);
 app.use('/api', sessionStatsRouter);
+app.use('/api', recoverRowsRouter);
+app.use('/api', chatBoxRouter);
 app.use('/api/students', fetchAllStudentsRouter);
 app.post('/populate/data', populateDataRouter);
 app.delete('/delete/rows', deleteRowsRouter);
