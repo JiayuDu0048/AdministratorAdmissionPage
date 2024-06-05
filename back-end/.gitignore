@@ -1,5 +1,0 @@
-# need to be set up by each individual on their local machine
-.env
-
-# created on each person's local machine with: npm install 
-node_modules/ 
